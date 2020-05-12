@@ -9,3 +9,4 @@ class DfxApi:
 
 from . import Organizations
 from . import Users
+from .Measurements import Measurements

@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import glob
 import json
 import os.path
 
@@ -68,6 +69,54 @@ async def main(args):
 
         return
 
+    # Measure
+    if not dfxapi.DfxApi.device_token and not dfxapi.DfxApi.user_token:
+        print("Please register and/or login first to obtain a token")
+        return
+
+    # Read the files
+    payload_files = sorted(glob.glob(os.path.join(args.payloads_folder, "payload*.bin")))
+    meta_files = sorted(glob.glob(os.path.join(args.payloads_folder, "metadata*.bin")))
+    prop_files = sorted(glob.glob(os.path.join(args.payloads_folder, "properties*.json")))
+    number_chunks = min(len(payload_files), len(meta_files), len(prop_files))
+
+    if number_chunks <= 0:
+        print(f"No payload files found in {args.payloads_folder}")
+        return
+
+    token = dfxapi.DfxApi.user_token if dfxapi.DfxApi.user_token else dfxapi.DfxApi.device_token
+    headers = {"Authorization": f"Bearer {token}"}
+    async with aiohttp.ClientSession(headers=headers) as session:
+        # Create a measurement
+        measurementID = await dfxapi.Measurements.create(session, args.study_id)
+        print(f"Created measurement {measurementID}")
+
+        # Iterate through the payload files and send chunks
+        for payload_file, meta_file, prop_file in zip(payload_files, meta_files, prop_files):
+            with open(payload_file, 'rb') as p, open(meta_file, 'rb') as m, open(prop_file, 'r') as pr:
+                payload_bytes = p.read()
+                meta_bytes = m.read()
+                props = json.load(pr)
+
+                # Determine action
+                action = 'CHUNK::PROCESS'
+                if props["chunk_number"] == 0 and props["number_chunks"] > 1:
+                    action = 'FIRST::PROCESS'
+                elif props["chunk_number"] == props["number_chunks"] - 1:
+                    action = 'LAST::PROCESS'
+
+                chunkID = await dfxapi.Measurements.add_data(session, measurementID, props["chunk_number"], action,
+                                                             props["start_time_s"], props["end_time_s"], meta_bytes,
+                                                             payload_bytes)
+                print(f"Sent chunk #{props['chunk_number']} ({action}) and received ID {chunkID}")
+                # Sleep to simulate a live measurement and not hit the rate limit
+                if not action.startswith("LAST"):
+                    print(f"...waiting {props['duration_s']:.1f} seconds...")
+                    await asyncio.sleep(props["duration_s"])
+
+        # Retrieve results
+        print("Measurement complete")
+
 
 def cmdline():
     parser = argparse.ArgumentParser()
@@ -80,6 +129,10 @@ def cmdline():
     parser_login = subparsers.add_parser("login")
     parser_login.add_argument("email")
     parser_login.add_argument("password")
+
+    parser_measure = subparsers.add_parser("measure")
+    parser_measure.add_argument("study_id")
+    parser_measure.add_argument("payloads_folder")
 
     args = parser.parse_args()
 
