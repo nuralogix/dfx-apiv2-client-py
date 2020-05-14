@@ -122,7 +122,7 @@ def cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument("--creds_file", default="./creds.json")
 
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", required=True)
     parser_reg = subparsers.add_parser("register")
     parser_reg.add_argument("license_key")
 
