@@ -108,14 +108,18 @@ async def main(args):
                 chunkID = await dfxapi.Measurements.add_data(session, measurementID, props["chunk_number"], action,
                                                              props["start_time_s"], props["end_time_s"], meta_bytes,
                                                              payload_bytes)
-                print(f"Sent chunk #{props['chunk_number']} ({action}) and received ID {chunkID}")
+                print(f"Sent chunk #{chunkID} ({action}) ...waiting {props['duration_s']:.0f} seconds...")
                 # Sleep to simulate a live measurement and not hit the rate limit
-                if not action.startswith("LAST"):
-                    print(f"...waiting {props['duration_s']:.1f} seconds...")
-                    await asyncio.sleep(props["duration_s"])
+                await asyncio.sleep(props["duration_s"])
 
         # Retrieve results
         print("Measurement complete")
+        await asyncio.sleep(5)
+        measurementResults = await dfxapi.Measurements.retrieve(session, measurementID)
+        print(f"Result: {measurementResults['StatusID']}")
+        for signal, results in measurementResults["Results"].items():
+            for result in results:
+                print(f"   {signal}:{result['Data'][0]/result['Multiplier']}")
 
 
 def cmdline():
