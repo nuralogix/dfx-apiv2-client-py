@@ -7,6 +7,6 @@ class DfxApi:
     user_token = ""
 
 
-from . import Organizations
-from . import Users
+from .Organizations import Organizations
+from .Users import Users
 from .Measurements import Measurements
