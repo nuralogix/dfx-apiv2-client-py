@@ -30,12 +30,20 @@ async def main(args):
     dfxapi.Settings.role_id = creds["role_id"]
     dfxapi.Settings.user_token = creds["user_token"]
 
+    # Check API status
+    async with aiohttp.ClientSession() as session:
+        api_status = await dfxapi.General.api_status(session)
+        if not api_status["StatusID"] == "ACTIVE":
+            print(f"DFX API Status: {api_status['StatusID']} ({dfxapi.Settings.rest_url})")
+
+            return
+
     # Register if we haven't
     if args.command == "register":
         if not dfxapi.Settings.device_token:
             async with aiohttp.ClientSession() as session:
-                await dfxapi.Organizations.Licenses.register(session, args.license_key, "LINUX", "DFX Example",
-                                                             "DFXCLIENT", "0.0.1")
+                await dfxapi.Organizations.register_license(session, args.license_key, "LINUX", "DFX Example",
+                                                            "DFXCLIENT", "0.0.1")
                 creds["device_id"] = dfxapi.Settings.device_id
                 creds["device_token"] = dfxapi.Settings.device_token
                 creds["role_id"] = dfxapi.Settings.role_id
@@ -58,7 +66,7 @@ async def main(args):
         if not dfxapi.Settings.user_token:
             headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
             async with aiohttp.ClientSession(headers=headers) as session:
-                await dfxapi.Users.Auth.login(session, args.email, args.password)
+                await dfxapi.Users.login(session, args.email, args.password)
                 creds["user_token"] = dfxapi.Settings.user_token
                 print("Login successful")
 

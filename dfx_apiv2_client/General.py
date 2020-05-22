@@ -1,53 +1,23 @@
-from .Settings import Settings
+from .Base import Base
 
 
-class General:
+class General(Base):
     @classmethod
-    async def status(cls, session):
-        url = f"{Settings.rest_url}/status"
-        async with session.get(url) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+    async def api_status(cls, session):
+        return await cls.get(session, "status")
 
     @classmethod
-    async def statuses(cls, session):
-        url = f"{Settings.rest_url}/statuses"
-        async with session.get(url) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+    async def list_available_statuses(cls, session):
+        return await cls.get(session, "statuses")
 
     @classmethod
-    async def roles(cls, session):
-        url = f"{Settings.rest_url}/roles"
-        async with session.get(url) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+    async def list_available_user_roles(cls, session):
+        return await cls.get(session, "roles")
 
     @classmethod
-    async def mimes(cls, session):
-        url = f"{Settings.rest_url}/mimes"
-        async with session.get(url) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+    async def list_accepted_mime_types(cls, session):
+        return await cls.get(session, "mimes")
 
     @classmethod
-    async def auth(cls, session):
-        url = f"{Settings.rest_url}/auth"
-        async with session.get(url) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+    async def verify_token(cls, session):
+        return await cls.get(session, "auth")

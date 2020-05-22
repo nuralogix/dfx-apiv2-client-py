@@ -1,11 +1,12 @@
 import base64
 from typing import Union
 
-from .Settings import Settings
+from .Base import Base
 
 
-class Measurements:
+class Measurements(Base):
     url_fragment = "measurements"
+
     @classmethod
     async def create(cls, session, study_id: str, resolution: int = 0, user_profile_id: str = ""):
         data = {
@@ -13,13 +14,10 @@ class Measurements:
             "Resolution": resolution,
             "UserProfileId": user_profile_id,
         }
-        url = f"{Settings.rest_url}/{cls.url_fragment}"
-        async with session.post(url, json=data) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body["ID"]
 
-            raise ValueError((url, resp.status, body))
+        body = await cls.post(session, cls.url_fragment, data=data)
+
+        return body["ID"]
 
     @classmethod
     async def add_data(cls, session, measurement_id: str, chunk_order: Union[str, int], action: str, start_time: str,
@@ -33,13 +31,10 @@ class Measurements:
             "Meta": str(metadata),
             "Payload": payload if type(payload) == str else base64.standard_b64encode(payload).decode('ascii')
         }
-        url = f"{Settings.rest_url}/{cls.url_fragment}/{measurement_id}/data"
-        async with session.post(url, json=data) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body["ID"]
 
-            raise ValueError((url, resp.status, body))
+        body = await cls.post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data)
+
+        return body["ID"]
 
     @classmethod
     async def list(cls,
@@ -85,20 +80,8 @@ class Measurements:
         if offset:
             params["Offset"] = offset
 
-        url = f"{Settings.rest_url}/{cls.url_fragment}"
-        async with session.get(url, params=params) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+        return await cls.get(session, cls.url_fragment, params=params)
 
     @classmethod
     async def retrieve(cls, session, measurement_id: str):
-        url = f"{Settings.rest_url}/{cls.url_fragment}/{measurement_id}"
-        async with session.get(url) as resp:
-            body = await resp.json()
-            if resp.status == 200:
-                return body
-
-            raise ValueError((url, resp.status, body))
+        return await cls.get(session, f"{cls.url_fragment}/{measurement_id}")
