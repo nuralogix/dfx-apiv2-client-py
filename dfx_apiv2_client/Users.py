@@ -1,12 +1,12 @@
-from dfx_apiv2_client import DfxApi
+from .Settings import Settings
 
 
-class Users(DfxApi):
+class Users:
     url_fragment = "users"
 
     @classmethod
     async def retrieve(cls, session):
-        url = f"{DfxApi.rest_url}/{cls.url_fragment}"
+        url = f"{Settings.rest_url}/{cls.url_fragment}"
         async with session.get(url) as resp:
             body = await resp.json()
             if resp.status == 200:
@@ -14,7 +14,7 @@ class Users(DfxApi):
 
             raise ValueError((url, resp.status, body))
 
-    class Auth(DfxApi):
+    class Auth:
         url_fragment = "users/auth"
 
         @classmethod
@@ -23,11 +23,11 @@ class Users(DfxApi):
                 "Email": email,
                 "Password": password,
             }
-            url = f"{DfxApi.rest_url}/{cls.url_fragment}"
+            url = f"{Settings.rest_url}/{cls.url_fragment}"
             async with session.post(url, json=data) as resp:
                 body = await resp.json()
                 if resp.status == 200:
-                    DfxApi.user_token = body["Token"]
+                    Settings.user_token = body["Token"]
                     return body
 
                 raise ValueError((url, resp.status, body))

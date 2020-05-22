@@ -10,7 +10,7 @@ import dfx_apiv2_client as dfxapi
 
 
 async def main(args):
-    # dfxapi.DfxApi.rest_url = "https://api2.api.deepaffex.ai:9443"
+    # dfxapi.Settings.rest_url = "https://api2.api.deepaffex.ai:9443"
 
     # Load creds
     creds = {
@@ -24,22 +24,22 @@ async def main(args):
         with open(args.creds_file, "r") as c:
             creds = json.loads(c.read())
 
-    dfxapi.DfxApi.device_id = creds["device_id"]
-    dfxapi.DfxApi.device_token = creds["device_token"]
-    dfxapi.DfxApi.role_id = creds["role_id"]
-    dfxapi.DfxApi.role_id = creds["role_id"]
-    dfxapi.DfxApi.user_token = creds["user_token"]
+    dfxapi.Settings.device_id = creds["device_id"]
+    dfxapi.Settings.device_token = creds["device_token"]
+    dfxapi.Settings.role_id = creds["role_id"]
+    dfxapi.Settings.role_id = creds["role_id"]
+    dfxapi.Settings.user_token = creds["user_token"]
 
     # Register if we haven't
     if args.command == "register":
-        if not dfxapi.DfxApi.device_token:
+        if not dfxapi.Settings.device_token:
             async with aiohttp.ClientSession() as session:
                 await dfxapi.Organizations.Licenses.register(session, args.license_key, "LINUX", "DFX Example",
                                                              "DFXCLIENT", "0.0.1")
-                creds["device_id"] = dfxapi.DfxApi.device_id
-                creds["device_token"] = dfxapi.DfxApi.device_token
-                creds["role_id"] = dfxapi.DfxApi.role_id
-                creds["user_token"] = dfxapi.DfxApi.user_token
+                creds["device_id"] = dfxapi.Settings.device_id
+                creds["device_token"] = dfxapi.Settings.device_token
+                creds["role_id"] = dfxapi.Settings.role_id
+                creds["user_token"] = dfxapi.Settings.user_token
                 print("Register successful")
 
                 with open(args.creds_file, "w") as c:
@@ -51,15 +51,15 @@ async def main(args):
 
     # Login if we haven't
     if args.command == "login":
-        if not dfxapi.DfxApi.device_token:
+        if not dfxapi.Settings.device_token:
             print("Please register first to obtain a device_token")
             return
 
-        if not dfxapi.DfxApi.user_token:
-            headers = {"Authorization": f"Bearer {dfxapi.DfxApi.device_token}"}
+        if not dfxapi.Settings.user_token:
+            headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
             async with aiohttp.ClientSession(headers=headers) as session:
                 await dfxapi.Users.Auth.login(session, args.email, args.password)
-                creds["user_token"] = dfxapi.DfxApi.user_token
+                creds["user_token"] = dfxapi.Settings.user_token
                 print("Login successful")
 
                 with open(args.creds_file, "w") as c:
@@ -70,7 +70,7 @@ async def main(args):
         return
 
     # Measure
-    if not dfxapi.DfxApi.device_token and not dfxapi.DfxApi.user_token:
+    if not dfxapi.Settings.device_token and not dfxapi.Settings.user_token:
         print("Please register and/or login first to obtain a token")
         return
 
@@ -84,7 +84,7 @@ async def main(args):
         print(f"No payload files found in {args.payloads_folder}")
         return
 
-    token = dfxapi.DfxApi.user_token if dfxapi.DfxApi.user_token else dfxapi.DfxApi.device_token
+    token = dfxapi.Settings.user_token if dfxapi.Settings.user_token else dfxapi.Settings.device_token
     headers = {"Authorization": f"Bearer {token}"}
     async with aiohttp.ClientSession(headers=headers) as session:
         # Create a measurement

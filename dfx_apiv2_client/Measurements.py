@@ -1,10 +1,10 @@
 import base64
 from typing import Union
 
-from dfx_apiv2_client import DfxApi
+from .Settings import Settings
 
 
-class Measurements(DfxApi):
+class Measurements:
     url_fragment = "measurements"
     @classmethod
     async def create(cls, session, study_id: str, resolution: int = 0, user_profile_id: str = ""):
@@ -13,7 +13,7 @@ class Measurements(DfxApi):
             "Resolution": resolution,
             "UserProfileId": user_profile_id,
         }
-        url = f"{DfxApi.rest_url}/{cls.url_fragment}"
+        url = f"{Settings.rest_url}/{cls.url_fragment}"
         async with session.post(url, json=data) as resp:
             body = await resp.json()
             if resp.status == 200:
@@ -33,7 +33,7 @@ class Measurements(DfxApi):
             "Meta": str(metadata),
             "Payload": payload if type(payload) == str else base64.standard_b64encode(payload).decode('ascii')
         }
-        url = f"{DfxApi.rest_url}/{cls.url_fragment}/{measurement_id}/data"
+        url = f"{Settings.rest_url}/{cls.url_fragment}/{measurement_id}/data"
         async with session.post(url, json=data) as resp:
             body = await resp.json()
             if resp.status == 200:
@@ -85,7 +85,7 @@ class Measurements(DfxApi):
         if offset:
             params["Offset"] = offset
 
-        url = f"{DfxApi.rest_url}/{cls.url_fragment}"
+        url = f"{Settings.rest_url}/{cls.url_fragment}"
         async with session.get(url, params=params) as resp:
             body = await resp.json()
             if resp.status == 200:
@@ -95,7 +95,7 @@ class Measurements(DfxApi):
 
     @classmethod
     async def retrieve(cls, session, measurement_id: str):
-        url = f"{DfxApi.rest_url}/{cls.url_fragment}/{measurement_id}"
+        url = f"{Settings.rest_url}/{cls.url_fragment}/{measurement_id}"
         async with session.get(url) as resp:
             body = await resp.json()
             if resp.status == 200:

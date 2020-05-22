@@ -1,10 +1,10 @@
-from dfx_apiv2_client import DfxApi
+from .Settings import Settings
 
 
-class Organizations(DfxApi):
+class Organizations:
     url_fragment = "organizations"
 
-    class Licenses(DfxApi):
+    class Licenses:
         url_fragment = "organizations/licenses"
 
         @classmethod
@@ -17,14 +17,14 @@ class Organizations(DfxApi):
                 "Identifier": app_id,
                 "Version": app_version
             }
-            url = f"{DfxApi.rest_url}/{cls.url_fragment}"
+            url = f"{Settings.rest_url}/{cls.url_fragment}"
             async with session.post(url, json=data) as resp:
                 body = await resp.json()
                 if resp.status == 200:
-                    DfxApi.device_id = body["DeviceID"]
-                    DfxApi.device_token = body["Token"]
-                    DfxApi.role_id = body["RoleID"]
-                    DfxApi.user_id = body["UserID"]
+                    Settings.device_id = body["DeviceID"]
+                    Settings.device_token = body["Token"]
+                    Settings.role_id = body["RoleID"]
+                    Settings.user_id = body["UserID"]
                     return body
 
                 raise ValueError((url, resp.status, body))
