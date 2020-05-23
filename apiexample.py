@@ -31,7 +31,7 @@ async def main(args):
     dfxapi.Settings.user_token = creds["user_token"]
 
     # Check API status
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(raise_for_status=True) as session:
         api_status = await dfxapi.General.api_status(session)
         if not api_status["StatusID"] == "ACTIVE":
             print(f"DFX API Status: {api_status['StatusID']} ({dfxapi.Settings.rest_url})")
@@ -41,7 +41,8 @@ async def main(args):
     # Register if we haven't
     if args.command == "register":
         if not dfxapi.Settings.device_token:
-            async with aiohttp.ClientSession() as session:
+            # TODO: Handle 404 properly here...
+            async with aiohttp.ClientSession(raise_for_status=True) as session:
                 await dfxapi.Organizations.register_license(session, args.license_key, "LINUX", "DFX Example",
                                                             "DFXCLIENT", "0.0.1")
                 creds["device_id"] = dfxapi.Settings.device_id
@@ -65,7 +66,7 @@ async def main(args):
 
         if not dfxapi.Settings.user_token:
             headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
-            async with aiohttp.ClientSession(headers=headers) as session:
+            async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
                 await dfxapi.Users.login(session, args.email, args.password)
                 creds["user_token"] = dfxapi.Settings.user_token
                 print("Login successful")
@@ -94,7 +95,7 @@ async def main(args):
 
     token = dfxapi.Settings.user_token if dfxapi.Settings.user_token else dfxapi.Settings.device_token
     headers = {"Authorization": f"Bearer {token}"}
-    async with aiohttp.ClientSession(headers=headers) as session:
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         # Create a measurement
         measurementID = await dfxapi.Measurements.create(session, args.study_id)
         print(f"Created measurement {measurementID}")
