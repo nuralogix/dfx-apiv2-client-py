@@ -15,7 +15,7 @@ class Measurements(Base):
             "UserProfileId": user_profile_id,
         }
 
-        body = await cls.post(session, cls.url_fragment, data=data)
+        body = await cls._post(session, cls.url_fragment, data=data)
 
         return body["ID"]
 
@@ -32,7 +32,7 @@ class Measurements(Base):
             "Payload": payload if type(payload) == str else base64.standard_b64encode(payload).decode('ascii')
         }
 
-        body = await cls.post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data)
+        body = await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data)
 
         return body["ID"]
 
@@ -80,8 +80,8 @@ class Measurements(Base):
         if offset:
             params["Offset"] = offset
 
-        return await cls.get(session, cls.url_fragment, params=params)
+        return await cls._get(session, cls.url_fragment, params=params)
 
     @classmethod
     async def retrieve(cls, session, measurement_id: str):
-        return await cls.get(session, f"{cls.url_fragment}/{measurement_id}")
+        return await cls._get(session, f"{cls.url_fragment}/{measurement_id}")

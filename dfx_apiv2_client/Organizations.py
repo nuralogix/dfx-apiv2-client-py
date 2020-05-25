@@ -16,7 +16,7 @@ class Organizations(Base):
             "Version": app_version
         }
 
-        body = await cls.post(session, f"{cls.url_fragment}/licenses", data=data)
+        body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data)
 
         Settings.device_id = body["DeviceID"]
         Settings.device_token = body["Token"]
