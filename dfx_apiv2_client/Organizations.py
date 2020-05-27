@@ -21,6 +21,10 @@ class Organizations(Base):
         Settings.device_id = body["DeviceID"]
         Settings.device_token = body["Token"]
         Settings.role_id = body["RoleID"]
-        Settings.user_id = body["UserID"]
+        Settings.user_id = body["UserID"]  # TODO: Why does register license return this
 
         return body
+
+    @classmethod
+    async def unregister_license(cls, session):
+        return await cls._delete(session, f"{cls.url_fragment}/licenses")
