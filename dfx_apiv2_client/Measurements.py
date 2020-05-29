@@ -83,5 +83,8 @@ class Measurements(Base):
         return await cls._get(session, cls.url_fragment, params=params)
 
     @classmethod
-    async def retrieve(cls, session, measurement_id: str):
-        return await cls._get(session, f"{cls.url_fragment}/{measurement_id}")
+    async def retrieve(cls, session: aiohttp.ClientSession, measurement_id: str, expand=True):
+        params = {}
+        if expand:
+            params["ExpandResults"] = "true"
+        return await cls._get(session, f"{cls.url_fragment}/{measurement_id}", params=params)

@@ -62,11 +62,33 @@ async def main(args):
             update_creds_file(creds, args.creds_file)
         return
 
-    # Measure
+    # Make sure we are registered and/or logged in
     if not dfxapi.Settings.device_token and not dfxapi.Settings.user_token:
         print("Please register and/or login first to obtain a token")
         return
 
+    # Use the token to create the headers
+    token = dfxapi.Settings.user_token if dfxapi.Settings.user_token else dfxapi.Settings.device_token
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Retrieve or list measurements
+    if args.command == "measurements":
+        if args.retrieve is None and args.list is None:
+            return
+        async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+            if args.retrieve is not None:  # Retrieve
+                measurementResults = await dfxapi.Measurements.retrieve(session, args.retrieve)
+                print(f"Result: {measurementResults['StatusID']}")
+                for signal, results in measurementResults["Results"].items():
+                    for result in results:
+                        print(f"   {signal}:{result['Data'][0]/result['Multiplier']}")
+            else:  # or List
+                list_of_measurements = await dfxapi.Measurements.list(session, limit=args.list)
+                pretty_print(list_of_measurements)
+
+            return
+
+    # Do a measurement
     # Read the files
     payload_files = sorted(glob.glob(os.path.join(args.payloads_folder, "payload*.bin")))
     meta_files = sorted(glob.glob(os.path.join(args.payloads_folder, "metadata*.bin")))
@@ -107,12 +129,6 @@ async def main(args):
 
         # Retrieve results
         print("Measurement complete")
-        await asyncio.sleep(5)
-        measurementResults = await dfxapi.Measurements.retrieve(session, measurementID)
-        print(f"Result: {measurementResults['StatusID']}")
-        for signal, results in measurementResults["Results"].items():
-            for result in results:
-                print(f"   {signal}:{result['Data'][0]/result['Multiplier']}")
 
 
 def update_creds_file(creds, creds_file):
@@ -123,6 +139,15 @@ def update_creds_file(creds, creds_file):
 
 def rand_reqid():
     return "".join(random.choices(string.ascii_letters, k=10))
+
+
+def pretty_print(list_of_dicts):
+    if len(list_of_dicts) <= 0:
+        return
+    col_widths = [max(len(str(k)), len(str(v))) for (k, v) in list_of_dicts[0].items()]
+    print("".join([f"{str(key):{cw}} " for (cw, key) in zip(col_widths, list_of_dicts[0].keys())]))
+    for m in list_of_dicts:
+        print("".join([f"{str(value):{cw}} " for (cw, value) in zip(col_widths, m.values())]))
 
 
 async def register(creds, creds_file, license_key):
@@ -197,6 +222,11 @@ def cmdline():
     parser_measure = subparsers.add_parser("measure")
     parser_measure.add_argument("study_id")
     parser_measure.add_argument("payloads_folder")
+
+    parser_measurements = subparsers.add_parser("measurements")
+    group_measurements = parser_measurements.add_mutually_exclusive_group()
+    group_measurements.add_argument("--list", metavar="N", help="List the last N measurements made", type=int)
+    group_measurements.add_argument("--retrieve", metavar="ID", help="Retrieve a measurements by ID", type=str)
 
     args = parser.parse_args()
 
