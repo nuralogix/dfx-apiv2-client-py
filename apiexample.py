@@ -3,6 +3,8 @@ import asyncio
 import glob
 import json
 import os.path
+import random
+import string
 
 import aiohttp
 
@@ -38,44 +40,26 @@ async def main(args):
 
             return
 
-    # Register if we haven't
+    # Register or unregister
     if args.command == "register":
-        if not dfxapi.Settings.device_token:
-            # TODO: Handle 404 properly here...
-            async with aiohttp.ClientSession(raise_for_status=True) as session:
-                await dfxapi.Organizations.register_license(session, args.license_key, "LINUX", "DFX Example",
-                                                            "DFXCLIENT", "0.0.1")
-                creds["device_id"] = dfxapi.Settings.device_id
-                creds["device_token"] = dfxapi.Settings.device_token
-                creds["role_id"] = dfxapi.Settings.role_id
-                creds["user_token"] = dfxapi.Settings.user_token
-                print("Register successful")
-
-                with open(args.creds_file, "w") as c:
-                    c.write(json.dumps(creds, indent=4))
+        if args.unregister:
+            success = await unregister(creds, args.creds_file)
         else:
-            print("Already registered")
+            success = await register(creds, args.creds_file, args.license_key)
 
+        if success:
+            update_creds_file(creds, args.creds_file)
         return
 
-    # Login if we haven't
+    # Login or logout
     if args.command == "login":
-        if not dfxapi.Settings.device_token:
-            print("Please register first to obtain a device_token")
-            return
-
-        if not dfxapi.Settings.user_token:
-            headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
-            async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-                await dfxapi.Users.login(session, args.email, args.password)
-                creds["user_token"] = dfxapi.Settings.user_token
-                print("Login successful")
-
-                with open(args.creds_file, "w") as c:
-                    c.write(json.dumps(creds, indent=4))
+        if args.logout:
+            success = logout(creds, args.creds_file)
         else:
-            print("Already logged in")
+            success = await login(creds, args.creds_file, args.email, args.password)
 
+        if success:
+            update_creds_file(creds, args.creds_file)
         return
 
     # Measure
@@ -131,17 +115,84 @@ async def main(args):
                 print(f"   {signal}:{result['Data'][0]/result['Multiplier']}")
 
 
+def update_creds_file(creds, creds_file):
+    with open(creds_file, "w") as c:
+        c.write(json.dumps(creds, indent=4))
+        print(f"Credentials updated in {creds_file}")
+
+
+def rand_reqid():
+    return "".join(random.choices(string.ascii_letters, k=10))
+
+
+async def register(creds, creds_file, license_key):
+    if dfxapi.Settings.device_token:
+        print("Already registered")
+        return False
+
+    # TODO: Handle 404 properly here...
+    async with aiohttp.ClientSession(raise_for_status=True) as session:
+        await dfxapi.Organizations.register_license(session, license_key, "LINUX", "DFX Example", "DFXCLIENT", "0.0.1")
+        creds["device_id"] = dfxapi.Settings.device_id
+        creds["device_token"] = dfxapi.Settings.device_token
+        creds["role_id"] = dfxapi.Settings.role_id
+        creds["user_token"] = dfxapi.Settings.user_token
+        print(f"Register successful with new device id {creds['device_id']}")
+    return True
+
+
+async def unregister(creds, creds_file):
+    if not dfxapi.Settings.device_token:
+        print("Not registered")
+        return False
+
+    headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+        await dfxapi.Organizations.unregister_license(session)
+        print(f"Unregister successful for device id {creds['device_id']}")
+        creds["device_id"] = ""
+        creds["device_token"] = ""
+        creds["role_id"] = ""
+    return True
+
+
+async def login(creds, creds_file, email, password):
+    if dfxapi.Settings.user_token:
+        print("Already logged in")
+        return False
+
+    if not dfxapi.Settings.device_token:
+        print("Please register first to obtain a device_token")
+        return False
+
+    headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+        await dfxapi.Users.login(session, email, password)
+        creds["user_token"] = dfxapi.Settings.user_token
+        print("Login successful")
+    return True
+
+
+def logout(creds, creds_file):
+    creds["user_token"] = ""
+    creds["user_id"] = ""
+    print("Logout successful")
+    return True
+
+
 def cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument("--creds_file", default="./creds.json")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
     parser_reg = subparsers.add_parser("register")
-    parser_reg.add_argument("license_key")
+    parser_reg.add_argument("license_key", help="DFX API Organization License")
+    parser_reg.add_argument("--unregister", help="Unregister (license_key will be ignored)", action="store_true")
 
     parser_login = subparsers.add_parser("login")
-    parser_login.add_argument("email")
-    parser_login.add_argument("password")
+    parser_login.add_argument("email", help="Email address")
+    parser_login.add_argument("password", help="Password")
+    parser_login.add_argument("--logout", help="Logout (email and password will be ignored)", action="store_true")
 
     parser_measure = subparsers.add_parser("measure")
     parser_measure.add_argument("study_id")
