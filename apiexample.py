@@ -41,8 +41,8 @@ async def main(args):
             return
 
     # Register or unregister
-    if args.command == "register":
-        if args.unregister:
+    if args.command == "org":
+        if args.subcommand == "unregister":
             success = await unregister(creds, args.creds_file)
         else:
             success = await register(creds, args.creds_file, args.license_key)
@@ -52,8 +52,8 @@ async def main(args):
         return
 
     # Login or logout
-    if args.command == "login":
-        if args.logout:
+    if args.command == "user":
+        if args.subcommand == "logout":
             success = logout(creds, args.creds_file)
         else:
             success = await login(creds, args.creds_file, args.email, args.password)
@@ -72,23 +72,23 @@ async def main(args):
     headers = {"Authorization": f"Bearer {token}"}
 
     # Retrieve or list measurements
-    if args.command == "measurements":
-        if args.retrieve is None and args.list is None:
-            return
-        async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-            if args.retrieve is not None:  # Retrieve
-                measurementResults = await dfxapi.Measurements.retrieve(session, args.retrieve)
+    if args.command == "measure":
+        if args.subcommand == "get":
+            async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+                measurementResults = await dfxapi.Measurements.retrieve(session, args.measurement_id)
                 print(f"Result: {measurementResults['StatusID']}")
                 for signal, results in measurementResults["Results"].items():
                     for result in results:
                         print(f"   {signal}:{result['Data'][0]/result['Multiplier']}")
-            else:  # or List
-                list_of_measurements = await dfxapi.Measurements.list(session, limit=args.list)
+            return
+        elif args.subcommand == "list":
+            async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+                list_of_measurements = await dfxapi.Measurements.list(session, limit=args.limit)
                 pretty_print(list_of_measurements)
-
             return
 
-    # Do a measurement
+    assert args.command == "measure" and args.subcommand == "make"
+    # Make a measurement
     # Read the files
     payload_files = sorted(glob.glob(os.path.join(args.payloads_folder, "payload*.bin")))
     meta_files = sorted(glob.glob(os.path.join(args.payloads_folder, "metadata*.bin")))
@@ -209,24 +209,28 @@ def cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument("--creds_file", default="./creds.json")
 
-    subparsers = parser.add_subparsers(dest="command", required=True)
-    parser_reg = subparsers.add_parser("register")
-    parser_reg.add_argument("license_key", help="DFX API Organization License")
-    parser_reg.add_argument("--unregister", help="Unregister (license_key will be ignored)", action="store_true")
+    subparser_top = parser.add_subparsers(dest="command", required=True)
+    subparser_orgs = subparser_top.add_parser("org", help="Organizations").add_subparsers(dest="subcommand",
+                                                                                           required=True)
+    register_parser = subparser_orgs.add_parser("register", help="Register device")
+    register_parser.add_argument("license_key", help="DFX API Organization License")
+    unregister_parser = subparser_orgs.add_parser("unregister", help="Unregister device")
 
-    parser_login = subparsers.add_parser("login")
-    parser_login.add_argument("email", help="Email address")
-    parser_login.add_argument("password", help="Password")
-    parser_login.add_argument("--logout", help="Logout (email and password will be ignored)", action="store_true")
+    subparser_users = subparser_top.add_parser("user", help="Users").add_subparsers(dest="subcommand", required=True)
+    login_parser = subparser_users.add_parser("login", help="User login")
+    login_parser.add_argument("email", help="Email address")
+    login_parser.add_argument("password", help="Password")
+    logout_parser = subparser_users.add_parser("logout", help="User logout")
 
-    parser_measure = subparsers.add_parser("measure")
-    parser_measure.add_argument("study_id")
-    parser_measure.add_argument("payloads_folder")
-
-    parser_measurements = subparsers.add_parser("measurements")
-    group_measurements = parser_measurements.add_mutually_exclusive_group()
-    group_measurements.add_argument("--list", metavar="N", help="List the last N measurements made", type=int)
-    group_measurements.add_argument("--retrieve", metavar="ID", help="Retrieve a measurements by ID", type=str)
+    subparser_meas = subparser_top.add_parser("measure", help="Measurements").add_subparsers(dest="subcommand",
+                                                                                             required=True)
+    make_parser = subparser_meas.add_parser("make", help="Make a measurement")
+    make_parser.add_argument("study_id", help="Study ID to use", type=str)
+    make_parser.add_argument("payloads_folder", help="Folder containing payloads", type=str)
+    list_parser = subparser_meas.add_parser("list", help="List existing measurements")
+    list_parser.add_argument("--limit", help="Number of measurements to retrieve", type=int, default=1)
+    get_parser = subparser_meas.add_parser("get", help="Retrieve a measurement")
+    get_parser.add_argument("measurement_id", help="ID of measurement to retrieve", type=str)
 
     args = parser.parse_args()
 
