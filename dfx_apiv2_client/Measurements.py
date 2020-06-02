@@ -1,6 +1,8 @@
 import base64
 from typing import Union
 
+import aiohttp
+
 from .Base import Base
 
 
@@ -8,7 +10,13 @@ class Measurements(Base):
     url_fragment = "measurements"
 
     @classmethod
-    async def create(cls, session, study_id: str, resolution: int = 0, user_profile_id: str = ""):
+    async def create(
+        cls,
+        session: aiohttp.ClientSession,
+        study_id: str,
+        resolution: int = 0,
+        user_profile_id: str = "",
+    ):
         data = {
             "StudyID": study_id,
             "Resolution": resolution,
@@ -20,16 +28,26 @@ class Measurements(Base):
         return body["ID"]
 
     @classmethod
-    async def add_data(cls, session, measurement_id: str, chunk_order: Union[str, int], action: str, start_time: str,
-                       end_time: str, metadata: Union[bytes, bytearray, memoryview,
-                                                      str], payload: Union[bytes, bytearray, memoryview, str]):
+    async def add_data(
+        cls,
+        session: aiohttp.ClientSession,
+        measurement_id: str,
+        chunk_order: Union[str, int],
+        action: str,
+        start_time_s: str,
+        end_time_s: str,
+        duration_s: str,
+        metadata: Union[bytes, bytearray, memoryview],
+        payload: Union[bytes, bytearray, memoryview],
+    ):
         data = {
             "ChunkOrder": chunk_order,
             "Action": action,
-            "StartTime": start_time,
-            "EndTime": end_time,
-            "Meta": str(metadata),
-            "Payload": payload if type(payload) == str else base64.standard_b64encode(payload).decode('ascii')
+            "StartTime": start_time_s,
+            "EndTime": end_time_s,
+            "Duration": duration_s,
+            "Meta": base64.standard_b64encode(metadata).decode('ascii'),
+            "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
 
         body = await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data)
@@ -37,17 +55,22 @@ class Measurements(Base):
         return body["ID"]
 
     @classmethod
-    async def list(cls,
-                   session,
-                   date: str = "",
-                   end_date: str = "",
-                   user_profile_id: str = "",
-                   user_profile_name: str = "",
-                   study_id: str = "",
-                   status_id: str = "",
-                   limit: int = 50,
-                   offset: int = 0):
-        """[summary]
+    async def list(
+        cls,
+        session: aiohttp.ClientSession,
+        date: str = "",
+        end_date: str = "",
+        user_profile_id: str = "",
+        user_profile_name: str = "",
+        study_id: str = "",
+        status_id: str = "",
+        limit: int = 50,
+        offset: int = 0,
+    ):
+        """Get a list of historical measurements
+
+        Arguments:
+            session {aiohttp.ClientSession} -- The client session
 
         Keyword Arguments:
             date {str} -- The date to return measurements for yyyy-mm-dd (default: {None})
