@@ -1,5 +1,5 @@
 import base64
-from typing import Union
+from typing import Any, Tuple, Union
 
 import aiohttp
 
@@ -16,7 +16,7 @@ class Measurements(Base):
         study_id: str,
         resolution: int = 0,
         user_profile_id: str = "",
-    ):
+    ) -> Any:
         data = {
             "StudyID": study_id,
             "Resolution": resolution,
@@ -39,7 +39,7 @@ class Measurements(Base):
         duration_s: str,
         metadata: Union[bytes, bytearray, memoryview],
         payload: Union[bytes, bytearray, memoryview],
-    ):
+    ) -> Any:
         data = {
             "ChunkOrder": chunk_order,
             "Action": action,
@@ -66,7 +66,7 @@ class Measurements(Base):
         status_id: str = "",
         limit: int = 50,
         offset: int = 0,
-    ):
+    ) -> Any:
         """Get a list of historical measurements
 
         Arguments:
@@ -106,7 +106,7 @@ class Measurements(Base):
         return await cls._get(session, cls.url_fragment, params=params)
 
     @classmethod
-    async def retrieve(cls, session: aiohttp.ClientSession, measurement_id: str, expand=True):
+    async def retrieve(cls, session: aiohttp.ClientSession, measurement_id: str, expand: bool = True) -> Any:
         params = {}
         if expand:
             params["ExpandResults"] = "true"

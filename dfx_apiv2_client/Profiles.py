@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Any
+
+import aiohttp
 
 from .Base import Base
 
@@ -7,7 +9,7 @@ class Profiles(Base):
     url_fragment = "users/profiles"
 
     @classmethod
-    async def create(cls, session, name: str, email: str):
+    async def create(cls, session: aiohttp.ClientSession, name: str, email: str) -> Any:
         data = {
             "Name": name,
             "Email": email,
@@ -18,21 +20,28 @@ class Profiles(Base):
         return body["ID"]
 
     @classmethod
-    async def update(cls, session, profile_id: str):
+    async def update(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
         # TODO: Does not have a data?
         return await cls._patch(session, f"{cls.url_fragment}/{profile_id}", data={})
 
     @classmethod
-    async def delete(cls, session, profile_id: str):
+    async def delete(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
         return await cls._delete(session, f"{cls.url_fragment}/{profile_id}")
 
     @classmethod
-    async def retrieve(cls, session, profile_id: str):
+    async def retrieve(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
         return await cls._get(session, f"{cls.url_fragment}/{profile_id}")
 
     @classmethod
     # TODO; What is user_profile_name here, is it email
-    async def list(cls, session, user_profile_name: str = "", status: str = "", limit: int = 25, offset: int = 0):
+    async def list(
+        cls,
+        session: aiohttp.ClientSession,
+        user_profile_name: str = "",
+        status: str = "",
+        limit: int = 25,
+        offset: int = 0,
+    ) -> Any:
         """[summary]
 
         Keyword Arguments:
@@ -57,7 +66,15 @@ class Profiles(Base):
         return await cls._get(session, cls.url_fragment, params=params)
 
     @classmethod
-    async def list_by_user(cls, session, user_profile_id, user_profile_name: str = "", status: str = "", limit: int = 25, offset: int = 0):
+    async def list_by_user(
+        cls,
+        session: aiohttp.ClientSession,
+        user_profile_id: str,
+        user_profile_name: str = "",
+        status: str = "",
+        limit: int = 25,
+        offset: int = 0,
+    ) -> Any:
         """[summary]
 
         Keyword Arguments:
