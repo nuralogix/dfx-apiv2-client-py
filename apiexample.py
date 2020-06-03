@@ -9,6 +9,7 @@ import string
 import aiohttp
 
 import dfx_apiv2_client as dfxapi
+from prettyprint import print_meas, print_pretty
 
 
 async def main(args):
@@ -56,22 +57,27 @@ async def main(args):
     token = dfxapi.Settings.user_token if dfxapi.Settings.user_token else dfxapi.Settings.device_token
     headers = {"Authorization": f"Bearer {token}"}
 
+    # Retrieve or list studies
+    if args.command == "study":
+        async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+            if args.subcommand == "get":
+                study = await dfxapi.Studies.retrieve(session, args.study_id)
+                print(json.dumps(study)) if args.json else print_pretty(study, args.csv)
+            elif args.subcommand == "list":
+                studies = await dfxapi.Studies.list(session)
+                print(json.dumps(studies)) if args.json else print_pretty(studies, args.csv)
+        return
+
     # Retrieve or list measurements
-    if args.command == "measure":
-        if args.subcommand == "get":
-            async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-                measurement_results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
-                print(f"Result: {measurement_results['StatusID']}")
-                if measurement_results["Results"]:
-                    for signal, results in measurement_results["Results"].items():
-                        for result in results:
-                            print(f"  {signal}: {result['Data'][0]/result['Multiplier']}")
-            return
-        elif args.subcommand == "list":
-            async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-                list_of_measurements = await dfxapi.Measurements.list(session, limit=args.limit)
-                pretty_print(list_of_measurements)
-            return
+    if args.command == "measure" and args.subcommand != "make":
+        async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+            if args.subcommand == "get":
+                results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
+                print(json.dumps(results)) if args.json else print_meas(results, args.csv)
+            elif args.subcommand == "list":
+                measurements = await dfxapi.Measurements.list(session, limit=args.limit)
+                print(json.dumps(measurements)) if args.json else print_pretty(measurements, args.csv)
+        return
 
     # Make a measurement
     assert args.command == "measure" and args.subcommand == "make"
@@ -151,15 +157,6 @@ def determine_action(chunk_number, number_chunks):
     elif chunk_number == number_chunks - 1:
         action = 'LAST::PROCESS'
     return action
-
-
-def pretty_print(list_of_dicts):
-    if len(list_of_dicts) <= 0:
-        return
-    col_widths = [max(len(str(k)), len(str(v))) for (k, v) in list_of_dicts[0].items()]
-    print("".join([f"{str(key):{cw}} " for (cw, key) in zip(col_widths, list_of_dicts[0].keys())]))
-    for m in list_of_dicts:
-        print("".join([f"{str(value):{cw}} " for (cw, value) in zip(col_widths, m.values())]))
 
 
 async def register(creds, creds_file, license_key):
@@ -243,6 +240,9 @@ async def measure_websocket(session, measurement_id, measurement_files):
 def cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument("--creds_file", default="./creds.json")
+    pp_group = parser.add_mutually_exclusive_group()
+    pp_group.add_argument("--json", help="Print as JSON", action="store_true", default=False)
+    pp_group.add_argument("--csv", help="Print grids as CSV", action="store_true", default=False)
 
     subparser_top = parser.add_subparsers(dest="command", required=True)
     subparser_orgs = subparser_top.add_parser("org", help="Organizations").add_subparsers(dest="subcommand",
@@ -257,6 +257,12 @@ def cmdline():
     login_parser.add_argument("password", help="Password")
     logout_parser = subparser_users.add_parser("logout", help="User logout")
 
+    subparser_studies = subparser_top.add_parser("study", help="Studies").add_subparsers(dest="subcommand",
+                                                                                         required=True)
+    study_list_parser = subparser_studies.add_parser("list", help="List existing studies")
+    study_get_parser = subparser_studies.add_parser("get", help="Retrieve a study")
+    study_get_parser.add_argument("study_id", help="ID of study to retrieve", type=str)
+
     subparser_meas = subparser_top.add_parser("measure", help="Measurements").add_subparsers(dest="subcommand",
                                                                                              required=True)
     make_parser = subparser_meas.add_parser("make", help="Make a measurement")
@@ -264,7 +270,7 @@ def cmdline():
     make_parser.add_argument("payloads_folder", help="Folder containing payloads", type=str)
     make_parser.add_argument("--rest", help="Use REST instead of WebSocket (no results returned)", action="store_true")
     list_parser = subparser_meas.add_parser("list", help="List existing measurements")
-    list_parser.add_argument("--limit", help="Number of measurements to retrieve", type=int, default=1)
+    list_parser.add_argument("--limit", help="Number of measurements to retrieve (default 1)", type=int, default=1)
     get_parser = subparser_meas.add_parser("get", help="Retrieve a measurement")
     get_parser.add_argument("measurement_id", help="ID of measurement to retrieve", type=str)
 
