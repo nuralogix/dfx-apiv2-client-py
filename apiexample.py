@@ -60,11 +60,12 @@ async def main(args):
     if args.command == "measure":
         if args.subcommand == "get":
             async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-                measurementResults = await dfxapi.Measurements.retrieve(session, args.measurement_id)
-                print(f"Result: {measurementResults['StatusID']}")
-                for signal, results in measurementResults["Results"].items():
-                    for result in results:
-                        print(f"   {signal}:{result['Data'][0]/result['Multiplier']}")
+                measurement_results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
+                print(f"Result: {measurement_results['StatusID']}")
+                if measurement_results["Results"]:
+                    for signal, results in measurement_results["Results"].items():
+                        for result in results:
+                            print(f"  {signal}: {result['Data'][0]/result['Multiplier']}")
             return
         elif args.subcommand == "list":
             async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
