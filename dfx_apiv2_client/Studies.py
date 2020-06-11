@@ -62,3 +62,21 @@ class Studies(Base):
             params["Status"] = status
 
         return await cls._get(session, cls.url_fragment, params=params)
+
+    @classmethod
+    async def retrieve_sdk_config_hash(cls, session: aiohttp.ClientSession, study_id: str, sdk_id: str) -> Any:
+        data = {
+            "StudyID": str(study_id),
+            "SDKID": str(sdk_id),
+        }
+
+        return await cls._post(session, f"{cls.url_fragment}/sdkconfig/hash", data=data)
+
+    @classmethod
+    async def retrieve_sdk_config_data(cls, session: aiohttp.ClientSession, study_id: str, sdk_id: str) -> Any:
+        data = {
+            "StudyID": str(study_id),
+            "SDKID": str(sdk_id),
+        }
+
+        return await cls._post(session, f"{cls.url_fragment}/sdkconfig", data=data)

@@ -63,6 +63,9 @@ async def main(args):
             if args.subcommand == "get":
                 study = await dfxapi.Studies.retrieve(session, args.study_id)
                 print(json.dumps(study)) if args.json else print_pretty(study, args.csv)
+            if args.subcommand == "get_sdk_cfg_data":
+                study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id)
+                print(json.dumps(study_cfg)) if args.json else print_pretty(study_cfg, args.csv)
             elif args.subcommand == "list":
                 studies = await dfxapi.Studies.list(session)
                 print(json.dumps(studies)) if args.json else print_pretty(studies, args.csv)
