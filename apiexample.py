@@ -114,7 +114,7 @@ async def main(args):
         # Add data to the measurement
         if use_websocket:
             # Make a measurement using WebSocket
-            await measure_websocket(session, measurement_id, measurement_files)
+            await measure_websocket(session, measurement_id, measurement_files, number_chunks_pr)
         else:
             # Make a measurement using REST (no results are returned)
             await measure_rest(session, measurement_id, measurement_files)
@@ -149,7 +149,7 @@ def save_creds(creds, creds_file):
         print(f"Credentials updated in {creds_file}")
 
 
-def rand_reqid():
+def generate_reqid():
     return "".join(random.choices(string.ascii_letters, k=10))
 
 
@@ -237,8 +237,53 @@ async def measure_rest(session, measurement_id, measurement_files):
             await asyncio.sleep(props["duration_s"])
 
 
-async def measure_websocket(session, measurement_id, measurement_files):
-    pass
+async def measure_websocket(session, measurement_id, measurement_files, number_chunks):
+    # Use the session to connect to the WebSocket
+    async with session.ws_connect(dfxapi.Settings.ws_url) as ws:
+        # Subscribe to results
+        results_request_id = generate_reqid()
+        await dfxapi.Measurements.ws_subscribe_to_results(ws, results_request_id, measurement_id)
+
+        # Use this to close WebSocket in the receive loop
+        results_expected = number_chunks
+
+        async def send_chunks():
+            # Coroutine to iterate through the payload files and send chunks using WebSocket
+            for payload_file, meta_file, prop_file in measurement_files:
+                with open(payload_file, 'rb') as p, open(meta_file, 'rb') as m, open(prop_file, 'r') as pr:
+                    payload_bytes = p.read()
+                    meta_bytes = m.read()
+                    props = json.load(pr)
+
+                    # Determine action and request id
+                    action = determine_action(props["chunk_number"], props["number_chunks"])
+                    request_id = generate_reqid()
+
+                    # Add data
+                    await dfxapi.Measurements.ws_add_data(ws, generate_reqid(), measurement_id, props["chunk_number"],
+                                                          action, props["start_time_s"], props["end_time_s"],
+                                                          props["duration_s"], meta_bytes, payload_bytes)
+                    sleep_time = props["duration_s"]
+                    print(f"Sent chunk req#:{request_id} - {action} ...waiting {sleep_time:.0f} seconds...")
+
+                    # Sleep to simulate a live measurement and not hit the rate limit
+                    await asyncio.sleep(sleep_time)
+
+        async def receive_results():
+            # Coroutine to receive results
+            num_results_received = 0
+            async for msg in ws:
+                _, request_id, payload = dfxapi.Measurements.ws_decode(msg)
+                if request_id == results_request_id and len(payload) > 0:
+                    print(f"  Received result - {len(payload)} bytes {payload[:80]}")
+                    num_results_received += 1
+                if num_results_received == results_expected:
+                    await ws.close()
+                    break
+
+        # Start the two coroutines and await till they finish
+        await asyncio.gather(send_chunks(), receive_results())
+
 
 def cmdline():
     parser = argparse.ArgumentParser()
@@ -265,6 +310,10 @@ def cmdline():
     study_list_parser = subparser_studies.add_parser("list", help="List existing studies")
     study_get_parser = subparser_studies.add_parser("get", help="Retrieve a study")
     study_get_parser.add_argument("study_id", help="ID of study to retrieve", type=str)
+    study_file_parser = subparser_studies.add_parser("get_sdk_cfg_data",
+                                                     help="Retrieve a study config file to use with DFX SDK")
+    study_file_parser.add_argument("study_id", help="ID of study to retrieve", type=str)
+    study_file_parser.add_argument("sdk_id", help="DFX SDK ID", type=str)
 
     subparser_meas = subparser_top.add_parser("measure", help="Measurements").add_subparsers(dest="subcommand",
                                                                                              required=True)

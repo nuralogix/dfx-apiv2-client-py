@@ -1,6 +1,8 @@
-from typing import Any, Union
+from typing import Any, Tuple, Union
 
 import aiohttp
+
+from dfx_apiv2_protos import util_pb2
 
 from .Settings import Settings
 
@@ -33,3 +35,24 @@ class Base:
 
         async with session.delete(url, json=data) as resp:
             return await resp.json()
+
+    @classmethod
+    def ws_decode(cls, msg: aiohttp.WSMessage) -> Tuple[int, str, bytes]:
+        if msg.type != aiohttp.WSMsgType.BINARY:
+            raise ValueError("Expecting only binary websocket responses")
+        result = msg.data
+        request_id = result[:10].decode('utf-8')
+        status = int(result[10:13].decode('utf-8'))
+        payload = result[13:]
+
+        if status >= 400:
+            error = util_pb2.Error()
+            try:
+                error.ParseFromString(payload)
+            except Exception:
+                pass
+            raise ValueError(
+                f"Status {status} for req#:{request_id}, Code: {error.Code}, Message: '{error.Message}', Description: '{error.Errors}'."
+            )
+
+        return status, request_id, payload
