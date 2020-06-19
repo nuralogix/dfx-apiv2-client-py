@@ -87,31 +87,24 @@ class Measurements(Base):
         Returns:
             [type] -- [description]
         """
-        params = {}
-        if date:
-            params["Date"] = date
-        if end_date:
-            params["EndDate"] = end_date
-        if user_profile_id:
-            params["UserProfileID"] = user_profile_id
-        if user_profile_name:
-            params["UserProfileName"] = user_profile_name
-        if study_id:
-            params["StudyID"] = study_id
-        if status_id:
-            params["StatusID"] = status_id
-        if limit:
-            params["Limit"] = limit
-        if offset:
-            params["Offset"] = offset
+        params = {
+            "Date": date,
+            "EndDate": end_date,
+            "UserProfileID": user_profile_id,
+            "UserProfileName": user_profile_name,
+            "StudyID": study_id,
+            "StatusID": status_id,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, cls.url_fragment, params=params)
 
     @classmethod
     async def retrieve(cls, session: aiohttp.ClientSession, measurement_id: str, expand: bool = True) -> Any:
-        params = {}
-        if expand:
-            params["ExpandResults"] = "true"
+        params = {
+            "ExpandResults": "true" if expand else "",
+        }
         return await cls._get(session, f"{cls.url_fragment}/{measurement_id}", params=params)
 
     @classmethod

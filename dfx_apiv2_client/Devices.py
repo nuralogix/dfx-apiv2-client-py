@@ -54,21 +54,15 @@ class Devices(Base):
         limit: int = 25,
         offset: int = 0,
     ) -> Any:
-        params = {}
-        if status_id:
-            params["StatusID"] = status_id
-        if device_type_id:
-            params["DeviceTypeID"] = device_type_id
-        if device_name:
-            params["Name"] = device_name
-        if date:
-            params["Date"] = date
-        if end_date:
-            params["EndDate"] = end_date
-        if limit:
-            params["Limit"] = limit
-        if offset:
-            params["Offset"] = offset
+        params = {
+            "StatusID": status_id,
+            "DeviceTypeID": device_type_id,
+            "Name": device_name,
+            "Date": date,
+            "EndDate": end_date,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, cls.url_fragment, params=params)
 

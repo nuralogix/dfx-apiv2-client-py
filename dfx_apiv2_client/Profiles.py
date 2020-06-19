@@ -53,15 +53,12 @@ class Profiles(Base):
         Returns:
             [type] -- [description]
         """
-        params = {}
-        if user_profile_name:
-            params["UserProfileName"] = user_profile_name
-        if status:
-            params["Status"] = status
-        if limit:
-            params["Limit"] = limit
-        if offset:
-            params["Offset"] = offset
+        params = {
+            "UserProfileName": user_profile_name,
+            "Status": status,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, cls.url_fragment, params=params)
 
@@ -87,14 +84,11 @@ class Profiles(Base):
         Returns:
             [type] -- [description]
         """
-        params = {}
-        if user_profile_name:
-            params["UserProfileName"] = user_profile_name
-        if status:
-            params["Status"] = status
-        if limit:
-            params["Limit"] = limit
-        if offset:
-            params["Offset"] = offset
+        params = {
+            "UserProfileName": user_profile_name,
+            "Status": status,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, f"users/{user_profile_id}/profiles", params=params)

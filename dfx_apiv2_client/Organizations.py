@@ -26,21 +26,16 @@ class Organizations(Base):
         limit: int = 25,
         offset: int = 0,
     ) -> Any:
-        params = {}
-        if start_date:
-            params["StartDate"] = start_date
-        if end_date:
-            params["EndDate"] = end_date
-        if email:
-            params["Username"] = email
-        if role_id:
-            params["RoleID"] = role_id
-        if gender:
-            params["Gender"] = gender
-        if status_id:
-            params["StatusID"] = status_id
-        params["Limit"] = limit
-        params["Offset"] = offset
+        params = {
+            "StartDate": start_date,
+            "EndDate": end_date,
+            "Username": email,
+            "RoleID": role_id,
+            "Gender": gender,
+            "StatusID": status_id,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, f"{cls.url_fragment}/users", params=params)
 
@@ -106,26 +101,17 @@ class Organizations(Base):
         limit: int = 50,
         offset: int = 0,
     ) -> Any:
-
-        params = {}
-        if date:
-            params["Date"] = date
-        if end_date:
-            params["EndDate"] = end_date
-        if user_profile_id:
-            params["UserProfileID"] = user_profile_id
-        if user_profile_name:
-            params["UserProfileName"] = user_profile_name
-        if study_id:
-            params["StudyID"] = study_id
-        if status_id:
-            params["StatusID"] = status_id
-        if email:
-            params["Username"] = email
-        if limit:
-            params["Limit"] = limit
-        if offset:
-            params["Offset"] = offset
+        params = {
+            "Date": date,
+            "EndDate": end_date,
+            "UserProfileID": user_profile_id,
+            "UserProfileName": user_profile_name,
+            "StudyID": study_id,
+            "StatusID": status_id,
+            "Username": email,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, f"{cls.url_fragment}/measurements", params=params)
 
@@ -134,9 +120,9 @@ class Organizations(Base):
                                    session: aiohttp.ClientSession,
                                    measurement_id: str,
                                    expand: bool = True) -> Any:
-        params = {}
-        if expand:
-            params["ExpandResults"] = "true"
+        params = {
+            "ExpandResults": "true" if expand else "",
+        }
         return await cls._get(session, f"{cls.url_fragment}/measurements/{measurement_id}", params=params)
 
     @classmethod
@@ -150,29 +136,20 @@ class Organizations(Base):
         limit: int = 25,
         offset: int = 0,
     ) -> Any:
-
-        params = {}
-        if owner_email:
-            params["OwnerUser"] = owner_email
-        if user_profile_name:
-            params["UserProfileName"] = user_profile_name
-        if status_id:
-            params["StatusID"] = status_id
-        if created_date:
-            params["Created"] = created_date
-        if limit:
-            params["Limit"] = limit
-        if offset:
-            params["Offset"] = offset
+        params = {
+            "OwnerUser": owner_email,
+            "UserProfileName": user_profile_name,
+            "StatusID": status_id,
+            "Created": created_date,
+            "Limit": limit,
+            "Offset": offset,
+        }
 
         return await cls._get(session, f"{cls.url_fragment}/profiles", params=params)
 
     @classmethod
-    async def retrieve_profile(cls, session: aiohttp.ClientSession, profile_id: str, expand: bool = True) -> Any:
-        params = {}
-        if expand:
-            params["ExpandResults"] = "true"
-        return await cls._get(session, f"{cls.url_fragment}/profiles/{profile_id}", params=params)
+    async def retrieve_profile(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
+        return await cls._get(session, f"{cls.url_fragment}/profiles/{profile_id}")
 
     @classmethod
     async def update_profile(cls, session: aiohttp.ClientSession, profile_id: str, name: str, email: str,
@@ -186,11 +163,8 @@ class Organizations(Base):
         return await cls._patch(session, f"{cls.url_fragment}/profiles/{profile_id}", data=data)
 
     @classmethod
-    async def retrieve_user(cls, session: aiohttp.ClientSession, user_id: str, expand: bool = True) -> Any:
-        params = {}
-        if expand:
-            params["ExpandResults"] = "true"
-        return await cls._get(session, f"{cls.url_fragment}/users/{user_id}", params=params)
+    async def retrieve_user(cls, session: aiohttp.ClientSession, user_id: str) -> Any:
+        return await cls._get(session, f"{cls.url_fragment}/users/{user_id}")
 
     @classmethod
     async def update_user(

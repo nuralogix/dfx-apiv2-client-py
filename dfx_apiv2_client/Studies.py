@@ -10,19 +10,18 @@ class Studies(Base):
 
     @classmethod
     async def types(cls, session: aiohttp.ClientSession, status: str) -> Any:
-        params = {}
-        if status:
-            params["Status"] = status
+        params = {
+            "Status": status,
+        }
         return await cls._get(session, f"{cls.url_fragment}/types", params=params)
 
     @classmethod
     async def list_templates(cls, session: aiohttp.ClientSession, status: str, type_: str) -> Any:
-        params = {}
-        if status:
-            params["Status"] = status
-        if type_:
-            params["Type"] = type_
-        return await cls._get(session, f"{cls.url_fragment}/templates   ", params=params)
+        params = {
+            "Status": status,
+            "Type": type_,
+        }
+        return await cls._get(session, f"{cls.url_fragment}/templates", params=params)
 
     @classmethod
     async def create(cls, session: aiohttp.ClientSession, study_name: str, description: str, study_template_id: str,
@@ -57,9 +56,9 @@ class Studies(Base):
 
     @classmethod
     async def list(cls, session: aiohttp.ClientSession, status: str = "") -> Any:
-        params = {}
-        if status:
-            params["Status"] = status
+        params = {
+            "Status": status,
+        }
 
         return await cls._get(session, cls.url_fragment, params=params)
 
