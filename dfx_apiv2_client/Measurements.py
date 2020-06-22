@@ -12,36 +12,34 @@ class Measurements(Base):
     url_fragment = "measurements"
 
     @classmethod
-    async def create(
-        cls,
-        session: aiohttp.ClientSession,
-        study_id: str,
-        resolution: int = 0,
-        user_profile_id: str = "",
-    ) -> Any:
+    async def create(cls,
+                     session: aiohttp.ClientSession,
+                     study_id: str,
+                     resolution: int = 0,
+                     user_profile_id: str = "",
+                     **kwargs: Any) -> Any:
         data = {
             "StudyID": study_id,
             "Resolution": resolution,
             "UserProfileId": user_profile_id,
         }
 
-        body = await cls._post(session, cls.url_fragment, data=data)
+        body = await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
         return body["ID"]
 
     @classmethod
-    async def add_data(
-        cls,
-        session: aiohttp.ClientSession,
-        measurement_id: str,
-        chunk_order: Union[str, int],
-        action: str,
-        start_time_s: str,
-        end_time_s: str,
-        duration_s: str,
-        metadata: Union[bytes, bytearray, memoryview],
-        payload: Union[bytes, bytearray, memoryview],
-    ) -> Any:
+    async def add_data(cls,
+                       session: aiohttp.ClientSession,
+                       measurement_id: str,
+                       chunk_order: Union[str, int],
+                       action: str,
+                       start_time_s: str,
+                       end_time_s: str,
+                       duration_s: str,
+                       metadata: Union[bytes, bytearray, memoryview],
+                       payload: Union[bytes, bytearray, memoryview],
+                       **kwargs: Any) -> Any:
         data = {
             "ChunkOrder": chunk_order,
             "Action": action,
@@ -52,23 +50,22 @@ class Measurements(Base):
             "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data)
+        body = await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data, **kwargs)
 
         return body["ID"]
 
     @classmethod
-    async def list(
-        cls,
-        session: aiohttp.ClientSession,
-        date: str = "",
-        end_date: str = "",
-        user_profile_id: str = "",
-        user_profile_name: str = "",
-        study_id: str = "",
-        status_id: str = "",
-        limit: int = 50,
-        offset: int = 0,
-    ) -> Any:
+    async def list(cls,
+                   session: aiohttp.ClientSession,
+                   date: str = "",
+                   end_date: str = "",
+                   user_profile_id: str = "",
+                   user_profile_name: str = "",
+                   study_id: str = "",
+                   status_id: str = "",
+                   limit: int = 50,
+                   offset: int = 0,
+                   **kwargs: Any) -> Any:
         """Get a list of historical measurements
 
         Arguments:
@@ -98,14 +95,18 @@ class Measurements(Base):
             "Offset": offset,
         }
 
-        return await cls._get(session, cls.url_fragment, params=params)
+        return await cls._get(session, cls.url_fragment, params=params, **kwargs)
 
     @classmethod
-    async def retrieve(cls, session: aiohttp.ClientSession, measurement_id: str, expand: bool = True) -> Any:
+    async def retrieve(cls,
+                       session: aiohttp.ClientSession,
+                       measurement_id: str,
+                       expand: bool = True,
+                       **kwargs: Any) -> Any:
         params = {
             "ExpandResults": "true" if expand else "",
         }
-        return await cls._get(session, f"{cls.url_fragment}/{measurement_id}", params=params)
+        return await cls._get(session, f"{cls.url_fragment}/{measurement_id}", params=params, **kwargs)
 
     @classmethod
     async def ws_subscribe_to_results(cls, ws: aiohttp.ClientWebSocketResponse, request_id: str,

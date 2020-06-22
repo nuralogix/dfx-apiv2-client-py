@@ -9,39 +9,38 @@ class Profiles(Base):
     url_fragment = "users/profiles"
 
     @classmethod
-    async def create(cls, session: aiohttp.ClientSession, name: str, email: str) -> Any:
+    async def create(cls, session: aiohttp.ClientSession, name: str, email: str, **kwargs: Any) -> Any:
         data = {
             "Name": name,
             "Email": email,
         }
 
-        body = await cls._post(session, cls.url_fragment, data=data)
+        body = await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
         return body["ID"]
 
     @classmethod
-    async def update(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
+    async def update(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:
         # TODO: Does not have a data?
-        return await cls._patch(session, f"{cls.url_fragment}/{profile_id}", data={})
+        return await cls._patch(session, f"{cls.url_fragment}/{profile_id}", data={}, **kwargs)
 
     @classmethod
-    async def delete(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
-        return await cls._delete(session, f"{cls.url_fragment}/{profile_id}")
+    async def delete(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{profile_id}", **kwargs)
 
     @classmethod
-    async def retrieve(cls, session: aiohttp.ClientSession, profile_id: str) -> Any:
-        return await cls._get(session, f"{cls.url_fragment}/{profile_id}")
+    async def retrieve(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:
+        return await cls._get(session, f"{cls.url_fragment}/{profile_id}", **kwargs)
 
     @classmethod
     # TODO; What is user_profile_name here, is it email
-    async def list(
-        cls,
-        session: aiohttp.ClientSession,
-        user_profile_name: str = "",
-        status: str = "",
-        limit: int = 25,
-        offset: int = 0,
-    ) -> Any:
+    async def list(cls,
+                   session: aiohttp.ClientSession,
+                   user_profile_name: str = "",
+                   status: str = "",
+                   limit: int = 25,
+                   offset: int = 0,
+                   **kwargs: Any) -> Any:
         """[summary]
 
         Keyword Arguments:
@@ -60,18 +59,17 @@ class Profiles(Base):
             "Offset": offset,
         }
 
-        return await cls._get(session, cls.url_fragment, params=params)
+        return await cls._get(session, cls.url_fragment, params=params, **kwargs)
 
     @classmethod
-    async def list_by_user(
-        cls,
-        session: aiohttp.ClientSession,
-        user_profile_id: str,
-        user_profile_name: str = "",
-        status: str = "",
-        limit: int = 25,
-        offset: int = 0,
-    ) -> Any:
+    async def list_by_user(cls,
+                           session: aiohttp.ClientSession,
+                           user_profile_id: str,
+                           user_profile_name: str = "",
+                           status: str = "",
+                           limit: int = 25,
+                           offset: int = 0,
+                           **kwargs: Any) -> Any:
         """[summary]
 
         Keyword Arguments:
@@ -91,4 +89,4 @@ class Profiles(Base):
             "Offset": offset,
         }
 
-        return await cls._get(session, f"users/{user_profile_id}/profiles", params=params)
+        return await cls._get(session, f"users/{user_profile_id}/profiles", params=params, **kwargs)

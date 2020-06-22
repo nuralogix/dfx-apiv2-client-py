@@ -7,21 +7,21 @@ from .Base import Base
 
 class General(Base):
     @classmethod
-    async def api_status(cls, session: aiohttp.ClientSession) -> Any:
-        return await cls._get(session, "status")
+    async def api_status(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, "status", **kwargs)
 
     @classmethod
-    async def list_available_statuses(cls, session: aiohttp.ClientSession) -> Any:
-        return await cls._get(session, "statuses")
+    async def list_available_statuses(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, "statuses", **kwargs)
 
     @classmethod
-    async def list_available_user_roles(cls, session: aiohttp.ClientSession) -> Any:
-        return await cls._get(session, "roles")
+    async def list_available_user_roles(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, "roles", **kwargs)
 
     @classmethod
-    async def list_accepted_mime_types(cls, session: aiohttp.ClientSession) -> Any:
-        return await cls._get(session, "mimes")
+    async def list_accepted_mime_types(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, "mimes", **kwargs)
 
     @classmethod
-    async def verify_token(cls, session: aiohttp.ClientSession) -> Any:
-        return await cls._get(session, "auth")
+    async def verify_token(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, "auth", **kwargs)

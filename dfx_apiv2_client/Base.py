@@ -9,31 +9,36 @@ from .Settings import Settings
 
 class Base:
     @classmethod
-    async def _get(cls, session: aiohttp.ClientSession, url_fragment: str, params: dict = None) -> Any:
+    async def _get(cls, session: aiohttp.ClientSession, url_fragment: str, params: dict = None, **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
-        async with session.get(url, params=params) as resp:
+        async with session.get(url, params=params, **kwargs) as resp:
             return await resp.json()
 
     @classmethod
-    async def _post(cls, session: aiohttp.ClientSession, url_fragment: str, data: Union[dict, list]) -> Any:
+    async def _post(cls, session: aiohttp.ClientSession, url_fragment: str, data: Union[dict, list],
+                    **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
-        async with session.post(url, json=data) as resp:
+        async with session.post(url, json=data, **kwargs) as resp:
             return await resp.json()
 
     @classmethod
-    async def _patch(cls, session: aiohttp.ClientSession, url_fragment: str, data: dict) -> Any:
+    async def _patch(cls, session: aiohttp.ClientSession, url_fragment: str, data: dict, **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
-        async with session.patch(url, json=data) as resp:
+        async with session.patch(url, json=data, **kwargs) as resp:
             return await resp.json()
 
     @classmethod
-    async def _delete(cls, session: aiohttp.ClientSession, url_fragment: str, data: Union[dict, list] = None) -> Any:
+    async def _delete(cls,
+                      session: aiohttp.ClientSession,
+                      url_fragment: str,
+                      data: Union[dict, list] = None,
+                      **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
-        async with session.delete(url, json=data) as resp:
+        async with session.delete(url, json=data, **kwargs) as resp:
             return await resp.json()
 
     @classmethod
@@ -45,6 +50,7 @@ class Base:
         status = int(result[10:13].decode('utf-8'))
         payload = result[13:]
 
+        # TODO: Handle raise_for_status == False
         if status >= 400:
             error = util_pb2.Error()
             try:
