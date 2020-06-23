@@ -20,7 +20,7 @@ async def main(args):
 
     # Check API status
     async with aiohttp.ClientSession(raise_for_status=True) as session:
-        api_status = await dfxapi.General.api_status(session)
+        _, api_status = await dfxapi.General.api_status(session)
         if not api_status["StatusID"] == "ACTIVE":
             print(f"DFX API Status: {api_status['StatusID']} ({dfxapi.Settings.rest_url})")
 
@@ -59,26 +59,26 @@ async def main(args):
 
     # Retrieve or list studies
     if args.command == "study":
-        async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+        async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
             if args.subcommand == "get":
-                study = await dfxapi.Studies.retrieve(session, args.study_id)
+                _, study = await dfxapi.Studies.retrieve(session, args.study_id)
                 print(json.dumps(study)) if args.json else print_pretty(study, args.csv)
             if args.subcommand == "get_sdk_cfg_data":
-                study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id)
+                _, study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id)
                 print(json.dumps(study_cfg)) if args.json else print_pretty(study_cfg, args.csv)
             elif args.subcommand == "list":
-                studies = await dfxapi.Studies.list(session)
+                _, studies = await dfxapi.Studies.list(session)
                 print(json.dumps(studies)) if args.json else print_pretty(studies, args.csv)
         return
 
     # Retrieve or list measurements
     if args.command == "measure" and args.subcommand != "make":
-        async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+        async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
             if args.subcommand == "get":
-                results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
+                _, results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
                 print(json.dumps(results)) if args.json else print_meas(results, args.csv)
             elif args.subcommand == "list":
-                measurements = await dfxapi.Measurements.list(session, limit=args.limit)
+                _, measurements = await dfxapi.Measurements.list(session, limit=args.limit)
                 print(json.dumps(measurements)) if args.json else print_pretty(measurements, args.csv)
         return
 
@@ -107,7 +107,8 @@ async def main(args):
     use_websocket = not args.rest
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         # Create a measurement
-        measurement_id = await dfxapi.Measurements.create(session, args.study_id)
+        _, create_result = await dfxapi.Measurements.create(session, args.study_id)
+        measurement_id = create_result["ID"]
         print(f"Created measurement {measurement_id}")
 
         measurement_files = zip(payload_files, meta_files, prop_files)
@@ -167,15 +168,19 @@ async def register(creds, creds_file, license_key):
         print("Already registered")
         return False
 
-    # TODO: Handle 404 properly here...
-    async with aiohttp.ClientSession(raise_for_status=True) as session:
-        await dfxapi.Organizations.register_license(session, license_key, "LINUX", "DFX Example", "DFXCLIENT", "0.0.1")
-        creds["device_id"] = dfxapi.Settings.device_id
-        creds["device_token"] = dfxapi.Settings.device_token
-        creds["role_id"] = dfxapi.Settings.role_id
-        creds["user_token"] = dfxapi.Settings.user_token
-        print(f"Register successful with new device id {creds['device_id']}")
-    return True
+    try:
+        async with aiohttp.ClientSession(raise_for_status=True) as session:
+            await dfxapi.Organizations.register_license(session, license_key, "LINUX", "DFX Example", "DFXCLIENT",
+                                                        "0.0.1")
+            creds["device_id"] = dfxapi.Settings.device_id
+            creds["device_token"] = dfxapi.Settings.device_token
+            creds["role_id"] = dfxapi.Settings.role_id
+            creds["user_token"] = dfxapi.Settings.user_token
+            print(f"Register successful with new device id {creds['device_id']}")
+        return True
+    except aiohttp.ClientResponseError as e:
+        print(f"Register failed: {e}")
+        return False
 
 
 async def unregister(creds, creds_file):
@@ -228,9 +233,10 @@ async def measure_rest(session, measurement_id, measurement_files):
             action = determine_action(props["chunk_number"], props["number_chunks"])
 
             # Add data
-            chunkID = await dfxapi.Measurements.add_data(session, measurement_id, props["chunk_number"], action,
+            add_data_res = await dfxapi.Measurements.add_data(session, measurement_id, props["chunk_number"], action,
                                                          props["start_time_s"], props["end_time_s"],
                                                          props["duration_s"], meta_bytes, payload_bytes)
+            chunkID = add_data_res["ID"]
             print(f"Sent chunk id#:{chunkID} - {action} ...waiting {props['duration_s']:.0f} seconds...")
 
             # Sleep to simulate a live measurement and not hit the rate limit

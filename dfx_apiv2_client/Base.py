@@ -13,7 +13,7 @@ class Base:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.get(url, params=params, **kwargs) as resp:
-            return await resp.json()
+            return resp.status, await resp.json()
 
     @classmethod
     async def _post(cls, session: aiohttp.ClientSession, url_fragment: str, data: Union[dict, list],
@@ -21,14 +21,14 @@ class Base:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.post(url, json=data, **kwargs) as resp:
-            return await resp.json()
+            return resp.status, await resp.json()
 
     @classmethod
     async def _patch(cls, session: aiohttp.ClientSession, url_fragment: str, data: dict, **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.patch(url, json=data, **kwargs) as resp:
-            return await resp.json()
+            return await resp.status, resp.json()
 
     @classmethod
     async def _delete(cls,
@@ -39,7 +39,7 @@ class Base:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.delete(url, json=data, **kwargs) as resp:
-            return await resp.json()
+            return await resp.status, resp.json()
 
     @classmethod
     def ws_decode(cls, msg: aiohttp.WSMessage) -> Tuple[int, str, bytes]:

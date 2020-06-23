@@ -44,12 +44,12 @@ class Users(Base):
             "Password": password,
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
+        status, body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
 
-        # TODO: Handle raise_for_status == False
-        Settings.user_token = body["Token"]
+        if status < 400:
+            Settings.user_token = body["Token"]
 
-        return body
+        return status, body
 
     @classmethod
     async def request_phone_login_code(cls, session: aiohttp.ClientSession, org_key: str, phone_number: str,

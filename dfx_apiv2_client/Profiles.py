@@ -15,9 +15,9 @@ class Profiles(Base):
             "Email": email,
         }
 
-        body = await cls._post(session, cls.url_fragment, data=data, **kwargs)
+        status, body = await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
-        return body["ID"]
+        return status, body
 
     @classmethod
     async def update(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:

@@ -57,9 +57,7 @@ class Organizations(Base):
             "RoleID": role_id
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/users", data=data, **kwargs)
-
-        return body["ID"]
+        return await cls._post(session, f"{cls.url_fragment}/users", data=data, **kwargs)
 
     @classmethod
     async def register_license(cls, session: aiohttp.ClientSession, license_key: str, device_type_id: str,
@@ -72,15 +70,15 @@ class Organizations(Base):
             "Version": app_version
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data, **kwargs)
+        status, body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data, **kwargs)
 
-        # TODO: Handle raise_for_status == False
-        Settings.device_id = body["DeviceID"]
-        Settings.device_token = body["Token"]
-        Settings.role_id = body["RoleID"]
-        Settings.user_id = body["UserID"]  # TODO: Why does register license return this
+        if status < 400:
+            Settings.device_id = body["DeviceID"]
+            Settings.device_token = body["Token"]
+            Settings.role_id = body["RoleID"]
+            Settings.user_id = body["UserID"]  # TODO: Why does register license return this
 
-        return body
+        return status, body
 
     @classmethod
     async def unregister_license(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
@@ -201,9 +199,9 @@ class Organizations(Base):
             "Identifier": org_identifier,
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
+        status, body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
 
-        # TODO: Handle raise_for_status == False
-        Settings.user_token = body["Token"]
+        if status < 400:
+            Settings.user_token = body["Token"]
 
-        return body
+        return status, body

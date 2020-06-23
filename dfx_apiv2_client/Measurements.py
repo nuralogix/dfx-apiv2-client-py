@@ -24,9 +24,7 @@ class Measurements(Base):
             "UserProfileId": user_profile_id,
         }
 
-        body = await cls._post(session, cls.url_fragment, data=data, **kwargs)
-
-        return body["ID"]
+        return await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
     @classmethod
     async def add_data(cls,
@@ -50,9 +48,7 @@ class Measurements(Base):
             "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data, **kwargs)
-
-        return body["ID"]
+        return await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data, **kwargs)
 
     @classmethod
     async def list(cls,

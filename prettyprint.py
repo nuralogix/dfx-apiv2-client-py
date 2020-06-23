@@ -13,7 +13,7 @@ def print_pretty(x, csv=False, indent=0) -> None:
 
 
 def print_meas(measurement_results, csv=False):
-    if measurement_results["Results"]:
+    if "Results" in measurement_results:
         grid_results = []
         for signal_id, signal_name in measurement_results["SignalNames"].items():
             result_data = measurement_results["Results"][signal_id][0]
