@@ -63,21 +63,12 @@ class Studies(Base):
         return await cls._get(session, cls.url_fragment, params=params, **kwargs)
 
     @classmethod
-    async def retrieve_sdk_config_hash(cls, session: aiohttp.ClientSession, study_id: str, sdk_id: str,
-                                       **kwargs: Any) -> Any:
-        data = {
-            "StudyID": str(study_id),
-            "SDKID": str(sdk_id),
-        }
-
-        return await cls._post(session, f"{cls.url_fragment}/sdkconfig/hash", data=data, **kwargs)
-
-    @classmethod
     async def retrieve_sdk_config_data(cls, session: aiohttp.ClientSession, study_id: str, sdk_id: str,
-                                       **kwargs: Any) -> Any:
+                                       current_hash: str, **kwargs: Any) -> Any:
         data = {
             "StudyID": str(study_id),
             "SDKID": str(sdk_id),
+            "MD5Hash": str(current_hash),
         }
 
         return await cls._post(session, f"{cls.url_fragment}/sdkconfig", data=data, **kwargs)
