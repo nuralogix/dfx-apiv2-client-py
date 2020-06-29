@@ -1,3 +1,6 @@
+# Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
+# See LICENSE.txt in the project root for license information
+
 from typing import Any, Tuple, Union
 
 import aiohttp
