@@ -18,7 +18,7 @@ class Groups(Base):
     @classmethod
     async def list(cls, session: aiohttp.ClientSession, filter_type: str = "", **kwargs: Any) -> Any:
         params = {
-            "Type": str(filter_type),
+            "Type": filter_type,
         }
 
         return await cls._get(session, cls.url_fragment, params=params, **kwargs)
@@ -36,10 +36,10 @@ class Groups(Base):
                      study_id: str = "",
                      **kwargs: Any) -> Any:
         data = {
-            "GroupTypeID": str(group_type_id),
-            "Description": str(description),
-            "Status": str(status),
-            "StudyID": str(study_id),
+            "GroupTypeID": group_type_id,
+            "Description": description,
+            "Status": status,
+            "StudyID": study_id,
         }
 
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
@@ -53,10 +53,10 @@ class Groups(Base):
                      study_id: str = "",
                      **kwargs: Any) -> Any:
         data = {
-            "GroupTypeID": str(group_type_id),
-            "Description": str(description),
-            "Status": str(status),
-            "StudyID": str(study_id),
+            "GroupTypeID": group_type_id,
+            "Description": description,
+            "Status": status,
+            "StudyID": study_id,
         }
 
         return await cls._patch(session, cls.url_fragment, data=data, **kwargs)

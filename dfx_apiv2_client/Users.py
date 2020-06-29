@@ -1,8 +1,7 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
-import datetime
-from typing import Any
+from typing import Any, Union
 
 import aiohttp
 
@@ -22,18 +21,18 @@ class Users(Base):
                      password: str,
                      phone_number: str,
                      gender: str,
-                     date_of_birth: datetime.date,
-                     height_cm: int,
-                     weight_kg: int,
+                     date_of_birth: str,
+                     height_cm: Union[str, int],
+                     weight_kg: Union[str, int],
                      **kwargs: Any) -> Any:
         data = {
-            "FirstName": str(first_name),
-            "LastName": str(last_name),
-            "Email": str(email).lower(),
-            "Password": str(password),
-            "PhoneNumber": str(phone_number),
-            "Gender": str(gender).lower(),
-            "DateOfBirth": date_of_birth.strftime("%Y-%m-%d"),
+            "FirstName": first_name,
+            "LastName": last_name,
+            "Email": email,
+            "Password": password,
+            "PhoneNumber": phone_number,
+            "Gender": gender,
+            "DateOfBirth": date_of_birth,
             "HeightCm": str(height_cm),
             "WeightKg": str(weight_kg),
         }
@@ -88,18 +87,18 @@ class Users(Base):
                      password: str,
                      phone_number: str,
                      gender: str,
-                     date_of_birth: datetime.date,
-                     height_cm: int,
-                     weight_kg: int,
+                     date_of_birth: str,
+                     height_cm: Union[str, int],
+                     weight_kg: Union[str, int],
                      **kwargs: Any) -> Any:
         data = {
-            "FirstName": str(first_name),
-            "LastName": str(last_name),
-            "Email": str(email).lower(),
-            "Password": str(password),
-            "PhoneNumber": str(phone_number),
-            "Gender": str(gender).lower(),
-            "DateOfBirth": date_of_birth.strftime("%Y-%m-%d"),
+            "FirstName": first_name,
+            "LastName": last_name,
+            "Email": email,
+            "Password": password,
+            "PhoneNumber": phone_number,
+            "Gender": gender,
+            "DateOfBirth": date_of_birth,
             "HeightCm": str(height_cm),
             "WeightKg": str(weight_kg),
         }
@@ -114,8 +113,8 @@ class Users(Base):
     async def send_password_reset_request(cls, session: aiohttp.ClientSession, email: str, org_id: str,
                                           **kwargs: Any) -> Any:
         data = {
-            "Email": str(email),
-            "Identifier": str(org_id),
+            "Email": email,
+            "Identifier": org_id,
         }
 
         return await cls._patch(session, f"{cls.url_fragment}/sendreset", data=data, **kwargs)
@@ -124,8 +123,8 @@ class Users(Base):
     async def reset_password(cls, session: aiohttp.ClientSession, reset_token: str, new_password: str,
                              **kwargs: Any) -> Any:
         data = {
-            "ResetToken": str(reset_token),
-            "Password": str(new_password),
+            "ResetToken": reset_token,
+            "Password": new_password,
         }
 
         return await cls._patch(session, f"{cls.url_fragment}/reset", data=data, **kwargs)

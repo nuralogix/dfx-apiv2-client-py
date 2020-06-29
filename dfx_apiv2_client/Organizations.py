@@ -1,7 +1,7 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
-from typing import Any
+from typing import Any, Union
 
 import aiohttp
 
@@ -67,7 +67,7 @@ class Organizations(Base):
                                app_name: str, app_id: str, app_version: str, **kwargs: Any) -> Any:
         data = {
             "Key": license_key,
-            "DeviceTypeID": device_type_id,
+            "DeviceTypeID": device_type_id,  # TODO: Describe list of allowed values here and in params below
             "Name": app_name,
             "Identifier": app_id,
             "Version": app_version
@@ -79,7 +79,7 @@ class Organizations(Base):
             Settings.device_id = body["DeviceID"]
             Settings.device_token = body["Token"]
             Settings.role_id = body["RoleID"]
-            Settings.user_id = body["UserID"]  # TODO: Why does register license return this
+            Settings.user_id = body["UserID"]  # TODO: Verify why returned
 
         return status, body
 
@@ -156,9 +156,9 @@ class Organizations(Base):
     async def update_profile(cls, session: aiohttp.ClientSession, profile_id: str, name: str, email: str, status: str,
                              **kwargs: Any) -> Any:
         data = {
-            "Name": str(name),
-            "Email": str(email),
-            "Status": str(status),
+            "Name": name,
+            "Email": email,
+            "Status": status,
         }
 
         return await cls._patch(session, f"{cls.url_fragment}/profiles/{profile_id}", data=data, **kwargs)
@@ -175,14 +175,14 @@ class Organizations(Base):
                           last_name: str,
                           gender: str,
                           date_of_birth: str,
-                          height_cm: int,
-                          weight_kg: int,
+                          height_cm: Union[str, int],
+                          weight_kg: Union[str, int],
                           **kwargs: Any) -> Any:
         data = {
-            "FirstName": str(first_name),
-            "LastName": str(last_name),
-            "Gender": str(gender),
-            "DateOfBirth": str(date_of_birth),
+            "FirstName": first_name,
+            "LastName": last_name,
+            "Gender": gender,
+            "DateOfBirth": date_of_birth,
             "HeightCm": str(height_cm),
             "WeightKg": str(weight_kg),
         }

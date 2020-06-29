@@ -30,8 +30,8 @@ class Studies(Base):
     async def create(cls, session: aiohttp.ClientSession, study_name: str, description: str, study_template_id: str,
                      config: dict, **kwargs: Any) -> Any:
         data = {
-            "Name": str(study_name),
-            "Description": str(description),
+            "Name": study_name,
+            "Description": description,
             "StudyTemplateID": study_template_id,
             "Config": config,
         }
@@ -42,8 +42,8 @@ class Studies(Base):
     async def update(cls, session: aiohttp.ClientSession, study_id: str, study_name: str, description: str,
                      config: dict, **kwargs: Any) -> Any:
         data = {
-            "Name": str(study_name),
-            "Description": str(description),
+            "Name": study_name,
+            "Description": description,
             "Config": config,
         }
 
@@ -69,9 +69,9 @@ class Studies(Base):
     async def retrieve_sdk_config_data(cls, session: aiohttp.ClientSession, study_id: str, sdk_id: str,
                                        current_hash: str, **kwargs: Any) -> Any:
         data = {
-            "StudyID": str(study_id),
-            "SDKID": str(sdk_id),
-            "MD5Hash": str(current_hash),
+            "StudyID": study_id,
+            "SDKID": sdk_id,
+            "MD5Hash": current_hash,
         }
 
         return await cls._post(session, f"{cls.url_fragment}/sdkconfig", data=data, **kwargs)

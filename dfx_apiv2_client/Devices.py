@@ -19,10 +19,10 @@ class Devices(Base):
     async def create(cls, session: aiohttp.ClientSession, device_name: str, device_type_id: str, device_id: str,
                      version: str, **kwargs: Any) -> Any:
         data = {
-            "Name": str(device_name),
-            "DeviceTypeID": str(device_type_id),
-            "Identifier": str(device_id),  # TODO: What is this??
-            "Version": str(version),
+            "Name": device_name,
+            "DeviceTypeID": device_type_id,
+            "Identifier": device_id,  # TODO: Describe parameter
+            "Version": version,
         }
 
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
@@ -31,11 +31,11 @@ class Devices(Base):
     async def update(cls, session: aiohttp.ClientSession, id: str, device_name: str, device_type_id: str,
                      device_id: str, status: str, version: str, **kwargs: Any) -> Any:
         data = {
-            "Name": str(device_name),
-            "DeviceTypeID": str(device_type_id),
-            "Status": str(status),
-            "Identifier": str(device_id),  # TODO: What is this??
-            "Version": str(version),
+            "Name": device_name,
+            "DeviceTypeID": device_type_id,
+            "Status": status,
+            "Identifier": device_id,  # TODO: Describe parameter
+            "Version": version,
         }
 
         return await cls._patch(session, f"{cls.url_fragment}/{id}", data=data, **kwargs)

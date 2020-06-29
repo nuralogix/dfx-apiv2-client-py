@@ -90,7 +90,7 @@ class Measurements(Base):
         return await cls._get(session, f"{cls.url_fragment}/{measurement_id}", params=params, **kwargs)
 
     @classmethod
-    async def ws_subscribe_to_results(cls, ws: aiohttp.ClientWebSocketResponse, request_id: str,
+    async def ws_subscribe_to_results(cls, ws: aiohttp.ClientWebSocketResponse, request_id: Union[str, int],
                                       measurement_id: str) -> None:
         action_id = "0510"
 

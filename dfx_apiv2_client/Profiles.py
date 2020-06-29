@@ -41,10 +41,9 @@ class Profiles(Base):
         return await cls._get(session, f"{cls.url_fragment}/{profile_id}", **kwargs)
 
     @classmethod
-    # TODO; What is user_profile_name here, is it email
     async def list(cls,
                    session: aiohttp.ClientSession,
-                   user_profile_name: str = "",
+                   user_profile_name: str = "",  # TODO Describe parameter
                    status: str = "",
                    limit: int = 25,
                    offset: int = 0,
