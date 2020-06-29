@@ -67,7 +67,8 @@ async def main(args):
                 _, study = await dfxapi.Studies.retrieve(session, args.study_id)
                 print(json.dumps(study)) if args.json else print_pretty(study, args.csv)
             if args.subcommand == "get_sdk_cfg_data":
-                _, study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id)
+                _, study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id,
+                                                                             args.current_hash)
                 print(json.dumps(study_cfg)) if args.json else print_pretty(study_cfg, args.csv)
             elif args.subcommand == "list":
                 _, studies = await dfxapi.Studies.list(session)
@@ -237,8 +238,8 @@ async def measure_rest(session, measurement_id, measurement_files):
 
             # Add data
             add_data_res = await dfxapi.Measurements.add_data(session, measurement_id, props["chunk_number"], action,
-                                                         props["start_time_s"], props["end_time_s"],
-                                                         props["duration_s"], meta_bytes, payload_bytes)
+                                                              props["start_time_s"], props["end_time_s"],
+                                                              props["duration_s"], meta_bytes, payload_bytes)
             chunkID = add_data_res["ID"]
             print(f"Sent chunk id#:{chunkID} - {action} ...waiting {props['duration_s']:.0f} seconds...")
 
@@ -323,6 +324,7 @@ def cmdline():
                                                      help="Retrieve a study config file to use with DFX SDK")
     study_file_parser.add_argument("study_id", help="ID of study to retrieve", type=str)
     study_file_parser.add_argument("sdk_id", help="DFX SDK ID", type=str)
+    study_file_parser.add_argument("current_hash", help="Current hash value", type=str)
 
     subparser_meas = subparser_top.add_parser("measure", help="Measurements").add_subparsers(dest="subcommand",
                                                                                              required=True)
