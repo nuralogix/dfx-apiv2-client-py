@@ -23,9 +23,14 @@ class Profiles(Base):
         return status, body
 
     @classmethod
-    async def update(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:
-        # TODO: Does not have a data?
-        return await cls._patch(session, f"{cls.url_fragment}/{profile_id}", data={}, **kwargs)
+    async def update(cls, session: aiohttp.ClientSession, profile_id: str, name: str, email: str, status: str,
+                     **kwargs: Any) -> Any:
+        data = {
+            "Name": name,
+            "Email": email,
+            "Status": status,
+        }
+        return await cls._patch(session, f"{cls.url_fragment}/{profile_id}", data=data, **kwargs)
 
     @classmethod
     async def delete(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:

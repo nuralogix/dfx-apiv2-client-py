@@ -63,15 +63,15 @@ class Users(Base):
     async def login_with_phone_code(cls, session: aiohttp.ClientSession, org_key: str, phone_number: str,
                                     login_code: str, **kwargs: Any) -> Any:
         data = {
-            "LoginCode": str(login_code),
-            "PhoneNumber": str(phone_number),
-            "OrgKey": str(org_key),
+            "LoginCode": login_code,
+            "PhoneNumber": phone_number,
+            "OrgKey": org_key,
         }
 
-        body = await cls._post(session, f"{cls.url_fragment}/auth/code", data=data, **kwargs)
+        status, body = await cls._post(session, f"{cls.url_fragment}/auth/code", data=data, **kwargs)
 
-        # TODO: Handle raise_for_status == False
-        Settings.user_token = body["Token"]
+        if status < 400:
+            Settings.user_token = body["Token"]
 
         return body
 

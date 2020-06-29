@@ -53,15 +53,18 @@ class Devices(Base):
                    device_version: str = "",
                    date: str = "",
                    end_date: str = "",
+                   unique: bool = False,
                    limit: int = 25,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
         params = {
             "StatusID": status_id,
             "DeviceTypeID": device_type_id,
-            "Name": device_name,
+            "Name": device_name,  # TODO: Verify docs
+            "Version": device_version,
             "Date": date,
             "EndDate": end_date,
+            "Unique": "true" if unique else "",
             "Limit": limit,
             "Offset": offset,
         }
