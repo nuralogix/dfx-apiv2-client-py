@@ -65,24 +65,6 @@ class Measurements(Base):
                    limit: int = 50,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
-        """Get a list of historical measurements
-
-        Arguments:
-            session {aiohttp.ClientSession} -- The client session
-
-        Keyword Arguments:
-            date {str} -- The date to return measurements for yyyy-mm-dd (default: {None})
-            end_date {str} -- End date for range of measurements to receive (default: {None})
-            user_profile_id {str} -- filter by a Profile ID (default: {None})
-            user_profile_name {str} -- filter by a Profile Name (default: {None})
-            study_id {str} -- filter by Study ID (default: {None})
-            status_id {str} -- filter by measurement Status (default: {None})
-            limit {int} -- Number of measurement records to return (default: {50})
-            offset {int} -- Offset to specify the start of the count (default: {0})
-
-        Returns:
-            [type] -- [description]
-        """
         params = {
             "Date": date,
             "EndDate": end_date,

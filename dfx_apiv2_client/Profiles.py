@@ -49,17 +49,6 @@ class Profiles(Base):
                    limit: int = 25,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
-        """[summary]
-
-        Keyword Arguments:
-            user_profile_name {str} -- filter by a Profile Name (default: {None})
-            status {str} -- filter by Profile Status (default: {None})
-            limit {int} -- Number of measurement records to return (default: {25})
-            offset {int} -- Offset to specify the start of the count (default: {0})
-
-        Returns:
-            [type] -- [description]
-        """
         params = {
             "UserProfileName": user_profile_name,
             "Status": status,
@@ -78,18 +67,6 @@ class Profiles(Base):
                            limit: int = 25,
                            offset: int = 0,
                            **kwargs: Any) -> Any:
-        """[summary]
-
-        Keyword Arguments:
-            user_profile_id {str} -- filter by Profile ID
-            user_profile_name {str} -- filter by a Profile Name (default: {None})
-            status {str} -- filter by Profile Status (default: {None})
-            limit {int} -- Number of measurement records to return (default: {25})
-            offset {int} -- Offset to specify the start of the count (default: {0})
-
-        Returns:
-            [type] -- [description]
-        """
         params = {
             "UserProfileName": user_profile_name,
             "Status": status,
