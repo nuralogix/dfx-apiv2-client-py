@@ -31,7 +31,7 @@ class Base:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.patch(url, json=data, **kwargs) as resp:
-            return await resp.status, resp.json()
+            return resp.status, await resp.json()
 
     @classmethod
     async def _delete(cls,
@@ -42,7 +42,7 @@ class Base:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.delete(url, json=data, **kwargs) as resp:
-            return await resp.status, resp.json()
+            return resp.status, await resp.json()
 
     @classmethod
     def ws_decode(cls, msg: aiohttp.WSMessage) -> Tuple[int, str, bytes]:
