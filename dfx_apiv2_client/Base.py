@@ -61,6 +61,6 @@ class Base:
             except Exception:
                 pass
             raise ValueError(f"Status {status} for req#:{request_id}, Code: {error.Code}, Message: '{error.Message}', "
-                             "Description: '{error.Errors}'.")
+                             f"Description: '{error.Errors}'.")
 
         return status, request_id, payload
