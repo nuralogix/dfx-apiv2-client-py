@@ -16,7 +16,7 @@ from prettyprint import print_meas, print_pretty
 
 
 async def main(args):
-    # dfxapi.Settings.rest_url = "https://api2.api.deepaffex.ai:9443"
+    # dfxapi.Settings.rest_url = "https://api.deepaffex.ai:9443"  # url override for testing
 
     # Load creds
     creds = load_creds(args.creds_file)
