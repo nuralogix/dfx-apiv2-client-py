@@ -20,11 +20,13 @@ class Measurements(Base):
                      study_id: str,
                      resolution: int = 0,
                      user_profile_id: str = "",
+                     partner_id: str = "",
                      **kwargs: Any) -> Any:
         data = {
             "StudyID": study_id,
             "Resolution": resolution,
-            "UserProfileId": user_profile_id,
+            "UserProfileID": user_profile_id,
+            "PartnerID": partner_id,
         }
 
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)

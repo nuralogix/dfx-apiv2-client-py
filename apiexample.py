@@ -131,7 +131,10 @@ async def main(args):
     use_websocket = not args.rest
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         # Create a measurement
-        _, create_result = await dfxapi.Measurements.create(session, args.study_id)
+        _, create_result = await dfxapi.Measurements.create(session,
+                                                            args.study_id,
+                                                            user_profile_id=args.user_profile_id,
+                                                            partner_id=args.partner_id)
         measurement_id = create_result["ID"]
         print(f"Created measurement {measurement_id}")
 
@@ -162,7 +165,7 @@ def load_creds(creds_file):
     dfxapi.Settings.device_id = creds["device_id"]
     dfxapi.Settings.device_token = creds["device_token"]
     dfxapi.Settings.role_id = creds["role_id"]
-    dfxapi.Settings.role_id = creds["role_id"]
+    dfxapi.Settings.user_id = creds["user_id"]
     dfxapi.Settings.user_token = creds["user_token"]
 
     return creds
@@ -368,6 +371,8 @@ def cmdline():
     make_parser.add_argument("study_id", help="Study ID to use", type=str)
     make_parser.add_argument("payloads_folder", help="Folder containing payloads", type=str)
     make_parser.add_argument("--rest", help="Use REST instead of WebSocket (no results returned)", action="store_true")
+    make_parser.add_argument("--user_profile_id", help="Set the Profile ID (Participant ID)", type=str, default="")
+    make_parser.add_argument("--partner_id", help="Set the PartnerID", type=str, default="")
     list_parser = subparser_meas.add_parser("list", help="List existing measurements")
     list_parser.add_argument("--limit", help="Number of measurements to retrieve (default 1)", type=int, default=1)
     get_parser = subparser_meas.add_parser("get", help="Retrieve a measurement")
