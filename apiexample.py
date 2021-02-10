@@ -102,7 +102,9 @@ async def main(args):
                 _, results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
                 print(json.dumps(results)) if args.json else print_meas(results, args.csv)
             elif args.subcommand == "list":
-                _, measurements = await dfxapi.Measurements.list(session, limit=args.limit)
+                _, measurements = await dfxapi.Measurements.list(session,
+                                                                 limit=args.limit,
+                                                                 user_profile_id=args.profile_id)
                 print(json.dumps(measurements)) if args.json else print_pretty(measurements, args.csv)
         return
 
@@ -375,6 +377,7 @@ def cmdline():
     make_parser.add_argument("--partner_id", help="Set the PartnerID", type=str, default="")
     list_parser = subparser_meas.add_parser("list", help="List existing measurements")
     list_parser.add_argument("--limit", help="Number of measurements to retrieve (default 1)", type=int, default=1)
+    list_parser.add_argument("--profile_id", help="Filter list by Profile ID", type=str, default="")
     get_parser = subparser_meas.add_parser("get", help="Retrieve a measurement")
     get_parser.add_argument("measurement_id", help="ID of measurement to retrieve", type=str)
 
