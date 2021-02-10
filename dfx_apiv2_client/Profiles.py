@@ -12,9 +12,9 @@ class Profiles(Base):
     url_fragment = "users/profiles"
 
     @classmethod
-    async def create(cls, session: aiohttp.ClientSession, name: str, email: str, **kwargs: Any) -> Any:
+    async def create(cls, session: aiohttp.ClientSession, profile_name: str, email: str, **kwargs: Any) -> Any:
         data = {
-            "Name": name,
+            "Name": profile_name,
             "Email": email,
         }
 
@@ -23,11 +23,11 @@ class Profiles(Base):
         return status, body
 
     @classmethod
-    async def update(cls, session: aiohttp.ClientSession, profile_id: str, name: str, email: str, status: str,
+    async def update(cls, session: aiohttp.ClientSession, profile_id: str, profile_name: str, profile_email: str, status: str,
                      **kwargs: Any) -> Any:
         data = {
-            "Name": name,
-            "Email": email,
+            "Name": profile_name,
+            "Email": profile_email,
             "Status": status,
         }
         return await cls._patch(session, f"{cls.url_fragment}/{profile_id}", data=data, **kwargs)
@@ -43,13 +43,13 @@ class Profiles(Base):
     @classmethod
     async def list(cls,
                    session: aiohttp.ClientSession,
-                   user_profile_name: str = "",  # TODO Describe parameter
+                   profile_name: str = "",
                    status: str = "",
                    limit: int = 25,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
         params = {
-            "UserProfileName": user_profile_name,
+            "UserProfileName": profile_name,
             "Status": status,
             "Limit": limit,
             "Offset": offset,
@@ -60,17 +60,17 @@ class Profiles(Base):
     @classmethod
     async def list_by_user(cls,
                            session: aiohttp.ClientSession,
-                           user_profile_id: str,
-                           user_profile_name: str = "",
+                           user_id: str = "",
+                           profile_name: str = "",
                            status: str = "",
                            limit: int = 25,
                            offset: int = 0,
                            **kwargs: Any) -> Any:
         params = {
-            "UserProfileName": user_profile_name,
+            "UserProfileName": profile_name,
             "Status": status,
             "Limit": limit,
             "Offset": offset,
         }
 
-        return await cls._get(session, f"users/{user_profile_id}/profiles", params=params, **kwargs)
+        return await cls._get(session, f"users/{user_id}/profiles", params=params, **kwargs)
