@@ -64,6 +64,7 @@ class Measurements(Base):
                    user_profile_name: str = "",
                    study_id: str = "",
                    status_id: str = "",
+                   partner_id: str = "",
                    limit: int = 50,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
@@ -74,6 +75,7 @@ class Measurements(Base):
             "UserProfileName": user_profile_name,
             "StudyID": study_id,
             "StatusID": status_id,
+            "PartnerID": partner_id,
             "Limit": limit,
             "Offset": offset,
         }
