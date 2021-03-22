@@ -95,11 +95,11 @@ class Measurements(Base):
 
     @classmethod
     async def ws_subscribe_to_results(cls, ws: aiohttp.ClientWebSocketResponse, request_id: Union[str, int],
-                                      measurement_id: str) -> None:
+                                      measurement_id: str, results_request_id: Union[str, int]) -> None:
         action_id = "0510"
 
         proto = measurements_pb2.SubscribeResultsRequest()
-        proto.RequestID = str(request_id)
+        proto.RequestID = str(results_request_id)
         proto.Params.ID = measurement_id
 
         ws_request = f"{action_id:4}{request_id:10}".encode() + proto.SerializeToString()

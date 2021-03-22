@@ -278,7 +278,7 @@ async def measure_websocket(session, measurement_id, measurement_files, number_c
     async with session.ws_connect(dfxapi.Settings.ws_url) as ws:
         # Subscribe to results
         results_request_id = generate_reqid()
-        await dfxapi.Measurements.ws_subscribe_to_results(ws, results_request_id, measurement_id)
+        await dfxapi.Measurements.ws_subscribe_to_results(ws, generate_reqid(), measurement_id, results_request_id)
 
         # Use this to close WebSocket in the receive loop
         results_expected = number_chunks
@@ -310,7 +310,7 @@ async def measure_websocket(session, measurement_id, measurement_files, number_c
             num_results_received = 0
             async for msg in ws:
                 _, request_id, payload = dfxapi.Measurements.ws_decode(msg)
-                if request_id == results_request_id and len(payload) > 0:
+                if request_id == results_request_id:
                     print(f"  Received result - {len(payload)} bytes {payload[:80]}")
                     num_results_received += 1
                 if num_results_received == results_expected:
