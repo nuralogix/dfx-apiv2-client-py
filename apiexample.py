@@ -132,12 +132,13 @@ async def main(args):
         return
 
     use_websocket = not args.rest
-    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+    async with aiohttp.ClientSession(raise_for_status=True) as session:
         # Create a measurement
         _, create_result = await dfxapi.Measurements.create(session,
                                                             args.study_id,
                                                             user_profile_id=args.user_profile_id,
-                                                            partner_id=args.partner_id)
+                                                            partner_id=args.partner_id,
+                                                            headers=headers)
         measurement_id = create_result["ID"]
         print(f"Created measurement {measurement_id}")
 
@@ -276,6 +277,9 @@ async def measure_rest(session, measurement_id, measurement_files):
 async def measure_websocket(session, measurement_id, measurement_files, number_chunks):
     # Use the session to connect to the WebSocket
     async with session.ws_connect(dfxapi.Settings.ws_url) as ws:
+        # Auth using Websocket (if headers cannot be manipulated)
+        await dfxapi.Organizations.ws_auth_with_token(ws, generate_reqid())
+
         # Subscribe to results
         results_request_id = generate_reqid()
         await dfxapi.Measurements.ws_subscribe_to_results(ws, generate_reqid(), measurement_id, results_request_id)

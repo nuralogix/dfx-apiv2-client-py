@@ -5,6 +5,8 @@ from typing import Any, Union
 
 import aiohttp
 
+from dfx_apiv2_protos import organizations_pb2
+
 from .Base import Base
 from .Settings import Settings
 
@@ -208,3 +210,14 @@ class Organizations(Base):
             Settings.user_token = body["Token"]
 
         return status, body
+
+    @classmethod
+    async def ws_auth_with_token(cls, ws: aiohttp.ClientWebSocketResponse, request_id: Union[str, int]) -> None:
+        action_id = "0718"
+
+        proto = organizations_pb2.LoginWithTokenRequest()
+        proto.Token = Settings.user_token if Settings.user_token else Settings.device_token
+
+        ws_request = f"{action_id:4}{request_id:10}".encode() + proto.SerializeToString()
+
+        await ws.send_bytes(ws_request)
