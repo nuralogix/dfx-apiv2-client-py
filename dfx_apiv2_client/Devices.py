@@ -28,8 +28,15 @@ class Devices(Base):
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
     @classmethod
-    async def update(cls, session: aiohttp.ClientSession, id: str, device_name: str, device_type_id: str,
-                     device_id: str, status: str, version: str, **kwargs: Any) -> Any:
+    async def update(cls,
+                     session: aiohttp.ClientSession,
+                     id: str,
+                     device_name: str = "",
+                     device_type_id: str = "",
+                     device_id: str = "",
+                     status: str = "",
+                     version: str = "",
+                     **kwargs: Any) -> Any:
         data = {
             "Name": device_name,
             "DeviceTypeID": device_type_id,
@@ -74,3 +81,11 @@ class Devices(Base):
     @classmethod
     async def delete(cls, session: aiohttp.ClientSession, device_id: str, **kwargs: Any) -> Any:
         return await cls._delete(session, f"{cls.url_fragment}/{device_id}", **kwargs)
+
+    @classmethod
+    async def delete_measurements(cls, session: aiohttp.ClientSession, device_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{device_id}/measurements", **kwargs)
+
+    @classmethod
+    async def retrieve_license_id(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, f"{cls.url_fragment}/licenses", **kwargs)
