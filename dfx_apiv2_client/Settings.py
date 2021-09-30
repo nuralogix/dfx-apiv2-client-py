@@ -2,8 +2,8 @@
 # See LICENSE.txt in the project root for license information
 
 class Settings:
-    rest_url = "https://api.deepaffex.ai:9443"
-    ws_url = "wss://api.deepaffex.ai:9080"
+    rest_url = "https://api.deepaffex.ai"
+    ws_url = "wss://api.deepaffex.ai"
     device_id = ""
     device_token = ""
     role_id = ""
