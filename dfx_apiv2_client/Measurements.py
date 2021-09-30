@@ -135,3 +135,7 @@ class Measurements(Base):
         ws_request = f"{action_id:4}{request_id:10}".encode() + proto.SerializeToString()
 
         await ws.send_bytes(ws_request)
+
+    @classmethod
+    async def delete(cls, session: aiohttp.ClientSession, measurement_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{measurement_id}", **kwargs)
