@@ -1,7 +1,7 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
-from typing import Any
+from typing import Any, Optional
 
 import aiohttp
 
@@ -39,8 +39,13 @@ class Studies(Base):
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
     @classmethod
-    async def update(cls, session: aiohttp.ClientSession, study_id: str, study_name: str, description: str,
-                     config: dict, **kwargs: Any) -> Any:
+    async def update(cls,
+                     session: aiohttp.ClientSession,
+                     study_id: str,
+                     study_name: str = "",
+                     description: str = "",
+                     config: Optional[dict] = None,
+                     **kwargs: Any) -> Any:
         data = {
             "Name": study_name,
             "Description": description,
