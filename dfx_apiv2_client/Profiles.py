@@ -23,8 +23,8 @@ class Profiles(Base):
         return status, body
 
     @classmethod
-    async def update(cls, session: aiohttp.ClientSession, profile_id: str, profile_name: str, profile_email: str, status: str,
-                     **kwargs: Any) -> Any:
+    async def update(cls, session: aiohttp.ClientSession, profile_id: str, profile_name: str, profile_email: str,
+                     status: str, **kwargs: Any) -> Any:
         data = {
             "Name": profile_name,
             "Email": profile_email,
