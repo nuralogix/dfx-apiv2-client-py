@@ -28,3 +28,7 @@ class General(Base):
     @classmethod
     async def verify_token(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
         return await cls._get(session, "auth", **kwargs)
+
+    @classmethod
+    async def list_available_regions(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._get(session, "regions", **kwargs)
