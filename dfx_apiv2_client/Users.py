@@ -130,8 +130,9 @@ class Users(Base):
         return await cls._patch(session, f"{cls.url_fragment}/reset", data=data, **kwargs)
 
     @classmethod
-    async def send_account_verification_code(cls, session: aiohttp.ClientSession, user_id: str, **kwargs: Any) -> Any:
-        return await cls._post(session, f"{cls.url_fragment}/verificationCode/{user_id}", {}, **kwargs)
+    async def send_account_verification_code(cls, session: aiohttp.ClientSession, user_id: str, org_id: str,
+                                             **kwargs: Any) -> Any:
+        return await cls._post(session, f"{cls.url_fragment}/verificationCode/{user_id}/{org_id}", {}, **kwargs)
 
     @classmethod
     async def verify_user_account(cls, session: aiohttp.ClientSession, verification_code: str, user_id: str,
@@ -146,3 +147,24 @@ class Users(Base):
     @classmethod
     async def remove(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
         return await cls._delete(session, cls.url_fragment, **kwargs)
+
+    @classmethod
+    async def delete_measurements_by_userid(cls, session: aiohttp.ClientSession, user_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{user_id}/measurements", **kwargs)
+
+    @classmethod
+    async def change_password(cls, session: aiohttp.ClientSession, org_id: str, email: str, password: str,
+                              new_password: str, **kwargs: Any) -> Any:
+        data = {
+            "Identifier": org_id,
+            "Email": email,
+            "Password": password,
+            "NewPassword": new_password,
+        }
+
+        return await cls._post(session, f"{cls.url_fragment}/changepassword", data=data, **kwargs)
+
+
+    @classmethod
+    async def logout(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/auth", **kwargs)
