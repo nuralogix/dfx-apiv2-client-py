@@ -197,4 +197,9 @@ class Users(Base):
 
     @classmethod
     async def logout(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
-        return await cls._delete(session, f"{cls.url_fragment}/auth", **kwargs)
+        status, body = await cls._delete(session, f"{cls.url_fragment}/auth", **kwargs)
+
+        if status < 400:
+            Settings.user_token = ""
+
+        return status, body
