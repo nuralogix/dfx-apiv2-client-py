@@ -4,6 +4,7 @@
 from .Devices import Devices
 from .General import General
 from .Groups import Groups
+from .Licenses import Licenses
 from .Measurements import Measurements
 from .Organizations import Organizations
 from .Profiles import Profiles
