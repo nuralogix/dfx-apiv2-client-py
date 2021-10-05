@@ -164,6 +164,13 @@ class Users(Base):
 
         return await cls._post(session, f"{cls.url_fragment}/changepassword", data=data, **kwargs)
 
+    @classmethod
+    async def renew_token(cls, session: aiohttp.ClientSession, license_key: str, **kwargs: Any) -> Any:
+        data = {
+            "Key": license_key,
+        }
+
+        return await cls._post(session, f"{cls.url_fragment}/auth/renew", data=data, **kwargs)
 
     @classmethod
     async def logout(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:

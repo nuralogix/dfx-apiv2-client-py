@@ -111,14 +111,24 @@ class Organizations(Base):
         return await cls._post(session, f"{cls.url_fragment}/users", data=data, **kwargs)
 
     @classmethod
-    async def register_license(cls, session: aiohttp.ClientSession, license_key: str, device_type_id: str,
-                               app_name: str, app_id: str, app_version: str, **kwargs: Any) -> Any:
+    async def register_license(cls,
+                               session: aiohttp.ClientSession,
+                               license_key: str,
+                               device_type_id: str,
+                               app_name: str,
+                               app_id: str,
+                               app_version: str,
+                               token_expires_in_seconds: int = 0,
+                               token_subject: str = "",
+                               **kwargs: Any) -> Any:
         data = {
             "Key": license_key,
             "DeviceTypeID": device_type_id,  # TODO: Describe list of allowed values here and in params below
             "Name": app_name,
             "Identifier": app_id,
-            "Version": app_version
+            "Version": app_version,
+            "TokenExpiresIn": token_expires_in_seconds,
+            "TokenSubject": token_subject
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data, **kwargs)
