@@ -16,7 +16,10 @@ class Base:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.get(url, params=params, **kwargs) as resp:
-            return resp.status, await resp.json()
+            if resp.content_type != "application/json":
+                return resp.status, await resp.read()
+            else:
+                return resp.status, await resp.json()
 
     @classmethod
     async def _post(cls, session: aiohttp.ClientSession, url_fragment: str, data: Union[dict, list],

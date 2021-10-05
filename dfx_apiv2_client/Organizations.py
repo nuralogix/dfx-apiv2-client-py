@@ -136,6 +136,10 @@ class Organizations(Base):
         return await cls._delete(session, f"{cls.url_fragment}/licenses", **kwargs)
 
     @classmethod
+    async def retrieve_logo(cls, session: aiohttp.ClientSession, org_id: str, **kwargs: Any) -> Any:
+        return await cls._get(session, f"{cls.url_fragment}/{org_id}/logo", **kwargs)
+
+    @classmethod
     async def list_measurements(cls,
                                 session: aiohttp.ClientSession,
                                 date: str = "",
