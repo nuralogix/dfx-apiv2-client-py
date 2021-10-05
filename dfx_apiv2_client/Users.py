@@ -40,10 +40,12 @@ class Users(Base):
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
     @classmethod
-    async def login(cls, session: aiohttp.ClientSession, email: str, password: str, **kwargs: Any) -> Any:
+    async def login(cls, session: aiohttp.ClientSession, email: str, password: str, mfa_token: str = "",
+                    **kwargs: Any) -> Any:
         data = {
             "Email": email,
             "Password": password,
+            "MFAToken": mfa_token,
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
@@ -104,6 +106,27 @@ class Users(Base):
         }
 
         return await cls._patch(session, cls.url_fragment, data=data, **kwargs)
+
+    @classmethod
+    async def create_mfa_secret(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._post(session, f"{cls.url_fragment}/mfa/secret", **kwargs)
+
+    @classmethod
+    async def enable_mfa(cls, session: aiohttp.ClientSession, mfa_secret: str, mfa_token: str, **kwargs: Any) -> Any:
+        data = {
+            "MFASecret": mfa_secret,
+            "MFAToken": mfa_token,
+        }
+
+        return await cls._post(session, f"{cls.url_fragment}/mfa", data=data, **kwargs)
+
+    @classmethod
+    async def disable_mfa_by_userid(cls, session: aiohttp.ClientSession, user_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{user_id}/mfa", **kwargs)
+
+    @classmethod
+    async def disable_mfa(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/mfa", **kwargs)
 
     @classmethod
     async def retrieve_user_role(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:

@@ -261,12 +261,18 @@ class Organizations(Base):
         return await cls._delete(session, f"{cls.url_fragment}/users/{user_id}", **kwargs)
 
     @classmethod
-    async def login(cls, session: aiohttp.ClientSession, email: str, password: str, org_identifier: str,
+    async def login(cls,
+                    session: aiohttp.ClientSession,
+                    email: str,
+                    password: str,
+                    org_id: str,
+                    mfa_token: str = "",
                     **kwargs: Any) -> Any:
         data = {
             "Email": email,
             "Password": password,
-            "Identifier": org_identifier,
+            "Identifier": org_id,
+            "MFAToken": mfa_token,
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
