@@ -125,7 +125,11 @@ async def main(args):
     with open(prop_files[0], 'r') as pr:
         props = json.load(pr)
         number_chunks_pr = props["number_chunks"]
-        duration_pr = props["duration_s"]
+        if "duration_s" in props:
+            duration_pr = props["duration_s"]
+        else:
+            duration_pr = props["end_time_s"] - props["start_time_s"]
+            props["duration_s"] = duration_pr
     if number_chunks_pr != number_files:
         print(f"Number of chunks in properties.json {number_chunks_pr} != Number of payload files {number_files}")
         return
@@ -303,6 +307,9 @@ async def measure_websocket(session, measurement_id, measurement_files, number_c
                     payload_bytes = p.read()
                     meta_bytes = m.read()
                     props = json.load(pr)
+
+                    if "duration_s" not in props:
+                        props["duration_s"] = props["end_time_s"] - props["start_time_s"]
 
                     # Determine action and request id
                     action = determine_action(props["chunk_number"], props["number_chunks"])
