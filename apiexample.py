@@ -43,13 +43,15 @@ async def main(args):
     # Login or logout
     if args.command == "user":
         if args.subcommand == "logout":
-            success = logout(creds, args.creds_file)
-        else:
-            success = await login(creds, args.creds_file, args.email, args.password)
-
-        if success:
-            save_creds(creds, args.creds_file)
-        return
+            success = await logout(creds)
+            if success:
+                save_creds(creds, args.creds_file)
+            return
+        elif args.subcommand == "login":
+            success = await login(creds, args.email, args.password)
+            if success:
+                save_creds(creds, args.creds_file)
+            return
 
     # The commands below need a token, so make sure we are registered and/or logged in
     if not dfxapi.Settings.device_token and not dfxapi.Settings.user_token:
@@ -229,7 +231,7 @@ async def unregister(creds, creds_file):
     return True
 
 
-async def login(creds, creds_file, email, password):
+async def login(creds, email, password):
     if dfxapi.Settings.user_token:
         print("Already logged in")
         return False
@@ -246,10 +248,17 @@ async def login(creds, creds_file, email, password):
     return True
 
 
-def logout(creds, creds_file):
-    creds["user_token"] = ""
-    creds["user_id"] = ""
-    print("Logout successful")
+async def logout(creds):
+    if not dfxapi.Settings.user_token:
+        print("Not logged in")
+        return False
+
+    headers = {"Authorization": f"Bearer {dfxapi.Settings.user_token}"}
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+        await dfxapi.Users.logout(session)
+        creds["user_token"] = dfxapi.Settings.user_token
+        creds["user_id"] = ""
+        print("Logout successful")
     return True
 
 
