@@ -6,6 +6,7 @@ from .General import General
 from .Groups import Groups
 from .Licenses import Licenses
 from .Measurements import Measurements
+from .Meta import Meta
 from .Organizations import Organizations
 from .Profiles import Profiles
 from .Settings import Settings
