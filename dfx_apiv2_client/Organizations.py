@@ -1,6 +1,6 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
-
+import base64
 from typing import Any, Union
 
 import aiohttp
@@ -17,6 +17,52 @@ class Organizations(Base):
     @classmethod
     async def retrieve(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
         return await cls._get(session, cls.url_fragment, **kwargs)
+
+    @classmethod
+    async def update(cls,
+                     session: aiohttp.ClientSession,
+                     org_name: str = "",
+                     org_id: str = "",
+                     contact_name: str = "",
+                     contact_email: str = "",
+                     logo: Union[None, bytes, bytearray, memoryview] = None,
+                     status_id: str = "",
+                     pwd_minlength: int = 6,
+                     admin_pwd_minlength: int = 7,
+                     pwd_required_char_classes: int = 3,
+                     pwd_require_uppercase: bool = False,
+                     pwd_require_lowercase: bool = False,
+                     pwd_require_digits: bool = False,
+                     pwd_require_special_chars: bool = False,
+                     pwd_limit_login_attempts_count_per_window: int = 0,
+                     pwd_limit_login_attempts_window_seconds: int = 0,
+                     session_max_duration_seconds: int = 0,
+                     session_idle_duration_seconds: int = 0,
+                     pwd_rotate_days: int = 90,
+                     pwd_required_unique_count: int = 5,
+                     **kwargs: Any) -> Any:
+        data = {
+            "Name": org_name,
+            "Identifier": org_id,
+            "Contact": contact_name,
+            "Email": contact_email,
+            "Logo": base64.standard_b64encode(logo).decode('ascii') if logo is not None else logo,
+            "StatusID": status_id,
+            "PasswordMinLength": pwd_minlength,
+            "AdminPasswordMinLength": admin_pwd_minlength,
+            "PasswordRequireCharacterClasses": pwd_required_char_classes,
+            "PasswordRequireUppercase": pwd_require_uppercase,
+            "PasswordRequireLowercase": pwd_require_lowercase,
+            "PasswordRequireDigits": pwd_require_digits,
+            "PasswordRequireSpecial": pwd_require_special_chars,
+            "PLimitLoginAttemptsCountPerWindow": pwd_limit_login_attempts_count_per_window,
+            "PLimitLoginAttemptsWindowSeconds": pwd_limit_login_attempts_window_seconds,
+            "SessionMaxDurationSeconds": session_max_duration_seconds,
+            "SessionIdleDurationSeconds": session_idle_duration_seconds,
+            "PasswordRotateDays": pwd_rotate_days,
+            "RequireUniquePasswordsCount": pwd_required_unique_count,
+        }
+        return await cls._patch(session, cls.url_fragment, data=data, **kwargs)
 
     @classmethod
     async def list_users(cls,
@@ -155,7 +201,12 @@ class Organizations(Base):
         return await cls._get(session, f"{cls.url_fragment}/profiles/{profile_id}", **kwargs)
 
     @classmethod
-    async def update_profile(cls, session: aiohttp.ClientSession, profile_id: str, name: str, email: str, status: str,
+    async def update_profile(cls,
+                             session: aiohttp.ClientSession,
+                             profile_id: str,
+                             name: str = "",
+                             email: str = "",
+                             status: str = "",
                              **kwargs: Any) -> Any:
         data = {
             "Name": name,
@@ -173,12 +224,12 @@ class Organizations(Base):
     async def update_user(cls,
                           session: aiohttp.ClientSession,
                           user_id: str,
-                          first_name: str,
-                          last_name: str,
-                          gender: str,
-                          date_of_birth: str,
-                          height_cm: Union[str, int],
-                          weight_kg: Union[str, int],
+                          first_name: str = "",
+                          last_name: str = "",
+                          gender: str = "",
+                          date_of_birth: str = "",
+                          height_cm: Union[str, int] = "",
+                          weight_kg: Union[str, int] = "",
                           **kwargs: Any) -> Any:
         data = {
             "FirstName": first_name,
@@ -221,3 +272,12 @@ class Organizations(Base):
         ws_request = f"{action_id:4}{request_id:10}".encode() + proto.SerializeToString()
 
         await ws.send_bytes(ws_request)
+
+    @classmethod
+    async def delete_all_measurements(cls, session: aiohttp.ClientSession, org_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{org_id}/measurements", **kwargs)
+
+    @classmethod
+    async def delete_measurements_by_partnerid(cls, session: aiohttp.ClientSession, org_id: str, partner_id: str,
+                                               **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{org_id}/partners/{partner_id}/measurements", **kwargs)
