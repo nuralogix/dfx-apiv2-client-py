@@ -127,9 +127,10 @@ class Organizations(Base):
             "Name": app_name,
             "Identifier": app_id,
             "Version": app_version,
-            "TokenExpiresIn": token_expires_in_seconds,
             "TokenSubject": token_subject
         }
+        if token_expires_in_seconds > 0:
+            data["TokenExpiresIn"] = token_expires_in_seconds
 
         status, body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data, **kwargs)
 
