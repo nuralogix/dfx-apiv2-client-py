@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='dfx-apiv2-client',
-    version='0.6.1',
+    version='0.7.0',
     packages=['dfx_apiv2_client'],
     install_requires=[
         'aiohttp[speedups]',

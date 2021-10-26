@@ -89,7 +89,7 @@ async def main(args):
             if args.subcommand == "get":
                 _, study = await dfxapi.Studies.retrieve(session, args.study_id)
                 print(json.dumps(study)) if args.json else print_pretty(study, args.csv)
-            if args.subcommand == "get_sdk_cfg_data":
+            elif args.subcommand == "get_sdk_cfg_data":
                 _, study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id,
                                                                              args.current_hash)
                 print(json.dumps(study_cfg)) if args.json else print_pretty(study_cfg, args.csv)
@@ -139,13 +139,13 @@ async def main(args):
         return
 
     use_websocket = not args.rest
-    async with aiohttp.ClientSession(raise_for_status=True) as session:
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         # Create a measurement
         _, create_result = await dfxapi.Measurements.create(session,
                                                             args.study_id,
                                                             user_profile_id=args.user_profile_id,
                                                             partner_id=args.partner_id,
-                                                            headers=headers)
+                                                            streaming=args.stream)
         measurement_id = create_result["ID"]
         print(f"Created measurement {measurement_id}")
 
@@ -178,6 +178,10 @@ def load_creds(creds_file):
     dfxapi.Settings.role_id = creds["role_id"]
     dfxapi.Settings.user_id = creds["user_id"]
     dfxapi.Settings.user_token = creds["user_token"]
+    if "rest_url" in creds and creds["rest_url"]:
+        dfxapi.Settings.rest_url = creds["rest_url"]
+    if "ws_url" in creds and creds["ws_url"]:
+        dfxapi.Settings.ws_url = creds["ws_url"]
 
     return creds
 
@@ -288,7 +292,7 @@ async def measure_rest(session, measurement_id, measurement_files):
             await asyncio.sleep(props["duration_s"])
 
 
-async def measure_websocket(session, measurement_id, measurement_files, number_chunks):
+async def measure_websocket(session: aiohttp.ClientSession, measurement_id, measurement_files, number_chunks):
     # Use the session to connect to the WebSocket
     async with session.ws_connect(dfxapi.Settings.ws_url) as ws:
         # Auth using Websocket (if headers cannot be manipulated)
@@ -344,7 +348,7 @@ async def measure_websocket(session, measurement_id, measurement_files, number_c
 
 def cmdline():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--creds_file", default="./creds.json")
+    parser.add_argument("-c", "--creds_file", default="./creds.json")
     pp_group = parser.add_mutually_exclusive_group()
     pp_group.add_argument("--json", help="Print as JSON", action="store_true", default=False)
     pp_group.add_argument("--csv", help="Print grids as CSV", action="store_true", default=False)
@@ -397,6 +401,7 @@ def cmdline():
     make_parser.add_argument("--rest", help="Use REST instead of WebSocket (no results returned)", action="store_true")
     make_parser.add_argument("--user_profile_id", help="Set the Profile ID (Participant ID)", type=str, default="")
     make_parser.add_argument("--partner_id", help="Set the PartnerID", type=str, default="")
+    make_parser.add_argument("--stream", help="Make a streaming measurement", action="store_true", default=False)
     list_parser = subparser_meas.add_parser("list", help="List existing measurements")
     list_parser.add_argument("--limit", help="Number of measurements to retrieve (default 1)", type=int, default=1)
     list_parser.add_argument("--profile_id", help="Filter list by Profile ID", type=str, default="")
