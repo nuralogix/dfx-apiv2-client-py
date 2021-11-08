@@ -285,7 +285,7 @@ class Organizations(Base):
 
     @classmethod
     async def ws_auth_with_token(cls, ws: aiohttp.ClientWebSocketResponse, request_id: Union[str, int]) -> None:
-        action_id = "0718"
+        action_id = "0717"
 
         proto = organizations_pb2.LoginWithTokenRequest()
         proto.Token = Settings.user_token if Settings.user_token else Settings.device_token
