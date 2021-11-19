@@ -13,6 +13,8 @@ import string
 import aiohttp
 
 import dfx_apiv2_client as dfxapi
+from dfx_apiv2_protos.measurements_pb2 import SubscribeResultsResponse
+
 from prettyprint import print_meas, print_pretty
 
 
@@ -335,10 +337,14 @@ async def measure_websocket(session: aiohttp.ClientSession, measurement_id, meas
         async def receive_results():
             # Coroutine to receive results
             num_results_received = 0
+            response = SubscribeResultsResponse()
             async for msg in ws:
                 _, request_id, payload = dfxapi.Measurements.ws_decode(msg)
                 if request_id == results_request_id:
-                    print(f"  Received result - {len(payload)} bytes {payload[:80]}")
+                    response.ParseFromString(payload)  # Parse the payload as a protobuf
+                    decoded_result_lines = str(response).splitlines()  # Just for printing ease...
+                    print(f" Received and decoded result: {decoded_result_lines[0]} "
+                          f"... {len(decoded_result_lines) - 1} more lines ...")
                     num_results_received += 1
                 if num_results_received == results_expected:
                     await ws.close()
