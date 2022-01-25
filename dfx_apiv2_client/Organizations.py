@@ -183,9 +183,9 @@ class Organizations(Base):
                                    measurement_id: str,
                                    expand: bool = True,
                                    **kwargs: Any) -> Any:
-        params = {
-            "ExpandResults": "true" if expand else "",
-        }
+        params = {}
+        if expand:
+            params["ExpandResults"] = "true"
         return await cls._get(session, f"{cls.url_fragment}/measurements/{measurement_id}", params=params, **kwargs)
 
     @classmethod
