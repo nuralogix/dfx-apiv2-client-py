@@ -3,7 +3,6 @@
 
 from .Devices import Devices
 from .General import General
-from .Groups import Groups
 from .Licenses import Licenses
 from .Measurements import Measurements
 from .Meta import Meta
