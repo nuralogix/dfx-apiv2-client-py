@@ -145,7 +145,16 @@ class Organizations(Base):
 
     @classmethod
     async def unregister_license(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
-        return await cls._delete(session, f"{cls.url_fragment}/licenses", **kwargs)
+        status, body = await cls._delete(session, f"{cls.url_fragment}/licenses", **kwargs)
+
+        if status < 400:
+            Settings.device_token = ""
+            Settings.device_id = ""
+            Settings.role_id = ""
+            Settings.user_id = ""
+            Settings.device_refresh_token = ""
+
+        return status, body
 
     @classmethod
     async def retrieve_logo(cls, session: aiohttp.ClientSession, org_id: str, **kwargs: Any) -> Any:
