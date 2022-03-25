@@ -104,7 +104,11 @@ async def main(args):
     if args.command == "measure" and args.subcommand != "make":
         async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
             if args.subcommand == "get":
-                _, results = await dfxapi.Measurements.retrieve(session, args.measurement_id)
+                measurement_id = creds["last_measurement"] if args.measurement_id is None else args.measurement_id
+                if not measurement_id or measurement_id.isspace():
+                    print("Please complete a measurement first or pass a measurement id")
+                    return
+                _, results = await dfxapi.Measurements.retrieve(session, measurement_id)
                 print(json.dumps(results)) if args.json else print_meas(results, args.csv)
             elif args.subcommand == "list":
                 _, measurements = await dfxapi.Measurements.list(session,
@@ -162,6 +166,9 @@ async def main(args):
 
         print(f"Measurement {measurement_id} complete")
 
+        creds["last_measurement"] = measurement_id
+        save_creds()
+
 
 def load_creds(creds_file):
     creds = {
@@ -170,6 +177,7 @@ def load_creds(creds_file):
         "role_id": "",
         "user_id": "",
         "user_token": "",
+        "last_measurement": "",
     }
     if os.path.isfile(creds_file):
         with open(creds_file, "r") as c:
@@ -415,7 +423,10 @@ def cmdline():
     list_parser.add_argument("--profile_id", help="Filter list by Profile ID", type=str, default="")
     list_parser.add_argument("--partner_id", help="Filter list by PartnerID", type=str, default="")
     get_parser = subparser_meas.add_parser("get", help="Retrieve a measurement")
-    get_parser.add_argument("measurement_id", help="ID of measurement to retrieve", type=str)
+    get_parser.add_argument("measurement_id",
+                            nargs="?",
+                            help="ID of measurement to retrieve (default: last measurement)",
+                            default=None)
 
     args = parser.parse_args()
 
