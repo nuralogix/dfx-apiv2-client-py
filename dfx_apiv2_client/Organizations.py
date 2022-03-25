@@ -137,6 +137,7 @@ class Organizations(Base):
         if status < 400:
             Settings.device_id = body["DeviceID"]
             Settings.device_token = body["Token"]
+            Settings.device_refresh_token = body["RefreshToken"]
             Settings.role_id = body["RoleID"]
             Settings.user_id = body["UserID"]  # TODO: Verify why returned
 
@@ -280,6 +281,7 @@ class Organizations(Base):
 
         if status < 400:
             Settings.user_token = body["Token"]
+            Settings.user_refresh_token = body["RefreshToken"]
 
         return status, body
 

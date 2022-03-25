@@ -52,6 +52,7 @@ class Users(Base):
 
         if status < 400:
             Settings.user_token = body["Token"]
+            Settings.user_refresh_token = body["RefreshToken"]
 
         return status, body
 
@@ -73,6 +74,7 @@ class Users(Base):
 
         if status < 400:
             Settings.user_token = body["Token"]
+            Settings.user_refresh_token = body["RefreshToken"]
 
         return body
 
@@ -201,5 +203,6 @@ class Users(Base):
 
         if status < 400:
             Settings.user_token = ""
+            Settings.user_refresh_token = ""
 
         return status, body

@@ -6,6 +6,8 @@ class Settings:
     ws_url = "wss://api.deepaffex.ai"
     device_id = ""
     device_token = ""
+    device_refresh_token = ""
     role_id = ""
     user_id = ""
     user_token = ""
+    user_refresh_token = ""
