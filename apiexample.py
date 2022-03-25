@@ -89,7 +89,11 @@ async def main(args):
     if args.command == "study":
         async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
             if args.subcommand == "get":
-                _, study = await dfxapi.Studies.retrieve(session, args.study_id)
+                study_id = creds["selected_study"] if args.study_id is None else args.study_id
+                if not study_id or study_id.isspace():
+                    print("Please select a study or pass a study id")
+                    return
+                _, study = await dfxapi.Studies.retrieve(session, study_id)
                 print(json.dumps(study)) if args.json else print_pretty(study, args.csv)
             elif args.subcommand == "get_sdk_cfg_data":
                 _, study_cfg = await dfxapi.Studies.retrieve_sdk_config_data(session, args.study_id, args.sdk_id,
@@ -98,6 +102,13 @@ async def main(args):
             elif args.subcommand == "list":
                 _, studies = await dfxapi.Studies.list(session)
                 print(json.dumps(studies)) if args.json else print_pretty(studies, args.csv)
+            elif args.subcommand == "select":
+                status, response = await dfxapi.Studies.retrieve(session, args.study_id, raise_for_status=False)
+                if status >= 400:
+                    print_pretty(response)
+                    return
+                creds["selected_study"] = args.study_id
+                save_creds(creds, args.creds_file)
         return
 
     # Retrieve or list measurements
@@ -122,6 +133,12 @@ async def main(args):
     assert args.command == "measure" and args.subcommand == "make"
 
     # Verify preconditions
+    # 1. Make sure a study is selected
+    if not creds["selected_study"]:
+        print("Please select a study first using 'study select'")
+        return
+
+    # 2. Make sure payload files exist
     payload_files = sorted(glob.glob(os.path.join(args.payloads_folder, "payload*.bin")))
     meta_files = sorted(glob.glob(os.path.join(args.payloads_folder, "metadata*.bin")))
     prop_files = sorted(glob.glob(os.path.join(args.payloads_folder, "properties*.json")))
@@ -148,7 +165,7 @@ async def main(args):
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         # Create a measurement
         _, create_result = await dfxapi.Measurements.create(session,
-                                                            args.study_id,
+                                                            creds["selected_study"],
                                                             user_profile_id=args.user_profile_id,
                                                             partner_id=args.partner_id,
                                                             streaming=args.stream)
@@ -177,11 +194,15 @@ def load_creds(creds_file):
         "role_id": "",
         "user_id": "",
         "user_token": "",
+        "selected_study": "",
         "last_measurement": "",
+        "study_cfg_hash": "",
+        "study_cfg_data": "",
     }
     if os.path.isfile(creds_file):
         with open(creds_file, "r") as c:
-            creds = json.loads(c.read())
+            read_config = json.loads(c.read())
+            creds = {**creds, **read_config}
 
     dfxapi.Settings.device_id = creds["device_id"]
     dfxapi.Settings.device_token = creds["device_token"]
@@ -402,17 +423,20 @@ def cmdline():
                                                                                          required=True)
     study_list_parser = subparser_studies.add_parser("list", help="List existing studies")
     study_get_parser = subparser_studies.add_parser("get", help="Retrieve a study")
-    study_get_parser.add_argument("study_id", help="ID of study to retrieve", type=str)
+    study_get_parser.add_argument("study_id",
+                                  nargs="?",
+                                  help="ID of study to retrieve (default: selected study)",
+                                  type=str)
+    study_select_parser = subparser_studies.add_parser("select", help="Select a study to use")
+    study_select_parser.add_argument("study_id", help="ID of study to use", type=str)
     study_file_parser = subparser_studies.add_parser("get_sdk_cfg_data",
                                                      help="Retrieve a study config file to use with DFX SDK")
-    study_file_parser.add_argument("study_id", help="ID of study to retrieve", type=str)
     study_file_parser.add_argument("sdk_id", help="DFX SDK ID", type=str)
     study_file_parser.add_argument("current_hash", help="Current hash value", type=str)
 
     subparser_meas = subparser_top.add_parser("measure", help="Measurements").add_subparsers(dest="subcommand",
                                                                                              required=True)
     make_parser = subparser_meas.add_parser("make", help="Make a measurement")
-    make_parser.add_argument("study_id", help="Study ID to use", type=str)
     make_parser.add_argument("payloads_folder", help="Folder containing payloads", type=str)
     make_parser.add_argument("--rest", help="Use REST instead of WebSocket (no results returned)", action="store_true")
     make_parser.add_argument("--user_profile_id", help="Set the Profile ID (Participant ID)", type=str, default="")
