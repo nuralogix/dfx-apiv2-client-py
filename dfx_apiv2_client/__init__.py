@@ -1,6 +1,7 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
+from .Auths import Auths
 from .Devices import Devices
 from .General import General
 from .Licenses import Licenses
