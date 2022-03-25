@@ -19,8 +19,6 @@ from prettyprint import print_meas, print_pretty
 
 
 async def main(args):
-    # dfxapi.Settings.rest_url = "https://api.deepaffex.ai:9443"  # url override for testing
-
     # Load creds
     creds = load_creds(args.creds_file)
 
@@ -28,16 +26,15 @@ async def main(args):
     async with aiohttp.ClientSession(raise_for_status=True) as session:
         _, api_status = await dfxapi.General.api_status(session)
         if not api_status["StatusID"] == "ACTIVE":
-            print(f"DFX API Status: {api_status['StatusID']} ({dfxapi.Settings.rest_url})")
-
+            print(f"DeepAffex Cloud API: {dfxapi.Settings.rest_url} Status: {api_status['StatusID']}")
             return
 
     # Register or unregister
     if args.command == "org":
         if args.subcommand == "unregister":
-            success = await unregister(creds, args.creds_file)
+            success = await unregister(creds)
         else:
-            success = await register(creds, args.creds_file, args.license_key)
+            success = await register(creds, args.license_key)
 
         if success:
             save_creds(creds, args.creds_file)
@@ -191,9 +188,11 @@ def load_creds(creds_file):
     creds = {
         "device_id": "",
         "device_token": "",
+        "device_refresh_token": "",
         "role_id": "",
         "user_id": "",
         "user_token": "",
+        "user_refresh_token": "",
         "selected_study": "",
         "last_measurement": "",
         "study_cfg_hash": "",
@@ -206,9 +205,11 @@ def load_creds(creds_file):
 
     dfxapi.Settings.device_id = creds["device_id"]
     dfxapi.Settings.device_token = creds["device_token"]
+    dfxapi.Settings.device_refresh_token = creds["device_refresh_token"]
     dfxapi.Settings.role_id = creds["role_id"]
     dfxapi.Settings.user_id = creds["user_id"]
     dfxapi.Settings.user_token = creds["user_token"]
+    dfxapi.Settings.user_refresh_token = creds["user_refresh_token"]
     if "rest_url" in creds and creds["rest_url"]:
         dfxapi.Settings.rest_url = creds["rest_url"]
     if "ws_url" in creds and creds["ws_url"]:
@@ -236,7 +237,7 @@ def determine_action(chunk_number, number_chunks):
     return action
 
 
-async def register(creds, creds_file, license_key):
+async def register(creds, license_key):
     if dfxapi.Settings.device_token:
         print("Already registered")
         return False
@@ -247,8 +248,13 @@ async def register(creds, creds_file, license_key):
                                                         "0.0.1")
             creds["device_id"] = dfxapi.Settings.device_id
             creds["device_token"] = dfxapi.Settings.device_token
+            creds["device_refresh_token"] = dfxapi.Settings.device_refresh_token
             creds["role_id"] = dfxapi.Settings.role_id
-            creds["user_token"] = dfxapi.Settings.user_token
+
+            # The following need to be cleared since we make measurements and user/device tokens are linked
+            creds["user_token"] = dfxapi.Settings.user_token = ""
+            creds["user_refresh_token"] = dfxapi.Settings.user_refresh_token = ""
+
             print(f"Register successful with new device id {creds['device_id']}")
         return True
     except aiohttp.ClientResponseError as e:
@@ -256,19 +262,28 @@ async def register(creds, creds_file, license_key):
         return False
 
 
-async def unregister(creds, creds_file):
+async def unregister(creds):
     if not dfxapi.Settings.device_token:
         print("Not registered")
         return False
 
     headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
-    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-        await dfxapi.Organizations.unregister_license(session)
-        print(f"Unregister successful for device id {creds['device_id']}")
-        creds["device_id"] = ""
-        creds["device_token"] = ""
-        creds["role_id"] = ""
-    return True
+    async with aiohttp.ClientSession(headers=headers) as session:
+        status, body = await dfxapi.Organizations.unregister_license(session)
+        if status < 400:
+            print(f"Unregister successful for device id {creds['device_id']}")
+            creds["device_id"] = ""
+            creds["device_token"] = ""
+            creds["device_refresh_token"] = ""
+            creds["role_id"] = ""
+
+            # The following need to be cleared since we make measurements and user/device tokens are linked
+            creds["user_token"] = dfxapi.Settings.user_token = ""
+            creds["user_refresh_token"] = dfxapi.Settings.user_refresh_token = ""
+
+            return True
+        else:
+            print(f"Unregister failed {status}: {body}")
 
 
 async def login(creds, email, password):
@@ -281,11 +296,17 @@ async def login(creds, email, password):
         return False
 
     headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
-    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-        await dfxapi.Users.login(session, email, password)
-        creds["user_token"] = dfxapi.Settings.user_token
-        print("Login successful")
-    return True
+    async with aiohttp.ClientSession(headers=headers) as session:
+        status, body = await dfxapi.Users.login(session, email, password)
+        if status < 400:
+            creds["user_token"] = dfxapi.Settings.user_token
+            creds["user_refresh_token"] = dfxapi.Settings.user_refresh_token
+
+            print("Login successful")
+            return True
+        else:
+            print(f"Login failed {status}: {body}")
+            return False
 
 
 async def logout(creds):
