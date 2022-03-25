@@ -354,7 +354,7 @@ async def measure_websocket(session: aiohttp.ClientSession, measurement_id, meas
                     request_id = generate_reqid()
 
                     # Add data
-                    await dfxapi.Measurements.ws_add_data(ws, generate_reqid(), measurement_id, props["chunk_number"],
+                    await dfxapi.Measurements.ws_add_data(ws, request_id, measurement_id, props["chunk_number"],
                                                           action, props["start_time_s"], props["end_time_s"],
                                                           props["duration_s"], meta_bytes, payload_bytes)
                     sleep_time = props["duration_s"]
