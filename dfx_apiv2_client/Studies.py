@@ -80,3 +80,7 @@ class Studies(Base):
         }
 
         return await cls._post(session, f"{cls.url_fragment}/sdkconfig", data=data, **kwargs)
+
+    async def delete_study_measurements(cls, session: aiohttp.ClientSession, study_id: str, **kwargs: Any) -> Any:
+        return await cls._delete(session, f"{cls.url_fragment}/{study_id}/measurements", **kwargs)
+
