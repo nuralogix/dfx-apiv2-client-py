@@ -19,8 +19,8 @@ from prettyprint import print_meas, print_pretty
 
 
 async def main(args):
-    # Load creds
-    creds = load_creds(args.creds_file)
+    # Load config
+    config = load_config(args.config_file)
 
     # Check API status
     async with aiohttp.ClientSession(raise_for_status=True) as session:
@@ -32,25 +32,25 @@ async def main(args):
     # Register or unregister
     if args.command == "org":
         if args.subcommand == "unregister":
-            success = await unregister(creds)
+            success = await unregister(config)
         else:
-            success = await register(creds, args.license_key)
+            success = await register(config, args.license_key)
 
         if success:
-            save_creds(creds, args.creds_file)
+            save_config(config, args.config_file)
         return
 
     # Login or logout
     if args.command == "user":
         if args.subcommand == "logout":
-            success = await logout(creds)
+            success = await logout(config)
             if success:
-                save_creds(creds, args.creds_file)
+                save_config(config, args.config_file)
             return
         elif args.subcommand == "login":
-            success = await login(creds, args.email, args.password)
+            success = await login(config, args.email, args.password)
             if success:
-                save_creds(creds, args.creds_file)
+                save_config(config, args.config_file)
             return
 
     # The commands below need a token, so make sure we are registered and/or logged in
@@ -86,7 +86,7 @@ async def main(args):
     if args.command == "study":
         async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
             if args.subcommand == "get":
-                study_id = creds["selected_study"] if args.study_id is None else args.study_id
+                study_id = config["selected_study"] if args.study_id is None else args.study_id
                 if not study_id or study_id.isspace():
                     print("Please select a study or pass a study id")
                     return
@@ -104,15 +104,15 @@ async def main(args):
                 if status >= 400:
                     print_pretty(response)
                     return
-                creds["selected_study"] = args.study_id
-                save_creds(creds, args.creds_file)
+                config["selected_study"] = args.study_id
+                save_config(config, args.config_file)
         return
 
     # Retrieve or list measurements
     if args.command == "measure" and args.subcommand != "make":
         async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
             if args.subcommand == "get":
-                measurement_id = creds["last_measurement"] if args.measurement_id is None else args.measurement_id
+                measurement_id = config["last_measurement"] if args.measurement_id is None else args.measurement_id
                 if not measurement_id or measurement_id.isspace():
                     print("Please complete a measurement first or pass a measurement id")
                     return
@@ -131,7 +131,7 @@ async def main(args):
 
     # Verify preconditions
     # 1. Make sure a study is selected
-    if not creds["selected_study"]:
+    if not config["selected_study"]:
         print("Please select a study first using 'study select'")
         return
 
@@ -162,7 +162,7 @@ async def main(args):
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         # Create a measurement
         _, create_result = await dfxapi.Measurements.create(session,
-                                                            creds["selected_study"],
+                                                            config["selected_study"],
                                                             user_profile_id=args.user_profile_id,
                                                             partner_id=args.partner_id,
                                                             streaming=args.stream)
@@ -180,12 +180,12 @@ async def main(args):
 
         print(f"Measurement {measurement_id} complete")
 
-        creds["last_measurement"] = measurement_id
-        save_creds()
+        config["last_measurement"] = measurement_id
+        save_config()
 
 
-def load_creds(creds_file):
-    creds = {
+def load_config(config_file):
+    config = {
         "device_id": "",
         "device_token": "",
         "device_refresh_token": "",
@@ -198,30 +198,30 @@ def load_creds(creds_file):
         "study_cfg_hash": "",
         "study_cfg_data": "",
     }
-    if os.path.isfile(creds_file):
-        with open(creds_file, "r") as c:
+    if os.path.isfile(config_file):
+        with open(config_file, "r") as c:
             read_config = json.loads(c.read())
-            creds = {**creds, **read_config}
+            config = {**config, **read_config}
 
-    dfxapi.Settings.device_id = creds["device_id"]
-    dfxapi.Settings.device_token = creds["device_token"]
-    dfxapi.Settings.device_refresh_token = creds["device_refresh_token"]
-    dfxapi.Settings.role_id = creds["role_id"]
-    dfxapi.Settings.user_id = creds["user_id"]
-    dfxapi.Settings.user_token = creds["user_token"]
-    dfxapi.Settings.user_refresh_token = creds["user_refresh_token"]
-    if "rest_url" in creds and creds["rest_url"]:
-        dfxapi.Settings.rest_url = creds["rest_url"]
-    if "ws_url" in creds and creds["ws_url"]:
-        dfxapi.Settings.ws_url = creds["ws_url"]
+    dfxapi.Settings.device_id = config["device_id"]
+    dfxapi.Settings.device_token = config["device_token"]
+    dfxapi.Settings.device_refresh_token = config["device_refresh_token"]
+    dfxapi.Settings.role_id = config["role_id"]
+    dfxapi.Settings.user_id = config["user_id"]
+    dfxapi.Settings.user_token = config["user_token"]
+    dfxapi.Settings.user_refresh_token = config["user_refresh_token"]
+    if "rest_url" in config and config["rest_url"]:
+        dfxapi.Settings.rest_url = config["rest_url"]
+    if "ws_url" in config and config["ws_url"]:
+        dfxapi.Settings.ws_url = config["ws_url"]
 
-    return creds
+    return config
 
 
-def save_creds(creds, creds_file):
-    with open(creds_file, "w") as c:
-        c.write(json.dumps(creds, indent=4))
-        print(f"Credentials updated in {creds_file}")
+def save_config(config, config_file):
+    with open(config_file, "w") as c:
+        c.write(json.dumps(config, indent=4))
+        print(f"Credentials updated in {config_file}")
 
 
 def generate_reqid():
@@ -237,7 +237,7 @@ def determine_action(chunk_number, number_chunks):
     return action
 
 
-async def register(creds, license_key):
+async def register(config, license_key):
     if dfxapi.Settings.device_token:
         print("Already registered")
         return False
@@ -246,23 +246,23 @@ async def register(creds, license_key):
         async with aiohttp.ClientSession(raise_for_status=True) as session:
             await dfxapi.Organizations.register_license(session, license_key, "LINUX", "DFX Example", "DFXCLIENT",
                                                         "0.0.1")
-            creds["device_id"] = dfxapi.Settings.device_id
-            creds["device_token"] = dfxapi.Settings.device_token
-            creds["device_refresh_token"] = dfxapi.Settings.device_refresh_token
-            creds["role_id"] = dfxapi.Settings.role_id
+            config["device_id"] = dfxapi.Settings.device_id
+            config["device_token"] = dfxapi.Settings.device_token
+            config["device_refresh_token"] = dfxapi.Settings.device_refresh_token
+            config["role_id"] = dfxapi.Settings.role_id
 
             # The following need to be cleared since we make measurements and user/device tokens are linked
-            creds["user_token"] = dfxapi.Settings.user_token = ""
-            creds["user_refresh_token"] = dfxapi.Settings.user_refresh_token = ""
+            config["user_token"] = dfxapi.Settings.user_token = ""
+            config["user_refresh_token"] = dfxapi.Settings.user_refresh_token = ""
 
-            print(f"Register successful with new device id {creds['device_id']}")
+            print(f"Register successful with new device id {config['device_id']}")
         return True
     except aiohttp.ClientResponseError as e:
         print(f"Register failed: {e}")
         return False
 
 
-async def unregister(creds):
+async def unregister(config):
     if not dfxapi.Settings.device_token:
         print("Not registered")
         return False
@@ -271,22 +271,22 @@ async def unregister(creds):
     async with aiohttp.ClientSession(headers=headers) as session:
         status, body = await dfxapi.Organizations.unregister_license(session)
         if status < 400:
-            print(f"Unregister successful for device id {creds['device_id']}")
-            creds["device_id"] = ""
-            creds["device_token"] = ""
-            creds["device_refresh_token"] = ""
-            creds["role_id"] = ""
+            print(f"Unregister successful for device id {config['device_id']}")
+            config["device_id"] = ""
+            config["device_token"] = ""
+            config["device_refresh_token"] = ""
+            config["role_id"] = ""
 
             # The following need to be cleared since we make measurements and user/device tokens are linked
-            creds["user_token"] = dfxapi.Settings.user_token = ""
-            creds["user_refresh_token"] = dfxapi.Settings.user_refresh_token = ""
+            config["user_token"] = dfxapi.Settings.user_token = ""
+            config["user_refresh_token"] = dfxapi.Settings.user_refresh_token = ""
 
             return True
         else:
             print(f"Unregister failed {status}: {body}")
 
 
-async def login(creds, email, password):
+async def login(config, email, password):
     if dfxapi.Settings.user_token:
         print("Already logged in")
         return False
@@ -299,8 +299,8 @@ async def login(creds, email, password):
     async with aiohttp.ClientSession(headers=headers) as session:
         status, body = await dfxapi.Users.login(session, email, password)
         if status < 400:
-            creds["user_token"] = dfxapi.Settings.user_token
-            creds["user_refresh_token"] = dfxapi.Settings.user_refresh_token
+            config["user_token"] = dfxapi.Settings.user_token
+            config["user_refresh_token"] = dfxapi.Settings.user_refresh_token
 
             print("Login successful")
             return True
@@ -309,7 +309,7 @@ async def login(creds, email, password):
             return False
 
 
-async def logout(creds):
+async def logout(config):
     if not dfxapi.Settings.user_token:
         print("Not logged in")
         return False
@@ -317,8 +317,8 @@ async def logout(creds):
     headers = {"Authorization": f"Bearer {dfxapi.Settings.user_token}"}
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         await dfxapi.Users.logout(session)
-        creds["user_token"] = dfxapi.Settings.user_token
-        creds["user_id"] = ""
+        config["user_token"] = dfxapi.Settings.user_token
+        config["user_id"] = ""
         print("Logout successful")
     return True
 
@@ -375,8 +375,8 @@ async def measure_websocket(session: aiohttp.ClientSession, measurement_id, meas
                     request_id = generate_reqid()
 
                     # Add data
-                    await dfxapi.Measurements.ws_add_data(ws, request_id, measurement_id, props["chunk_number"],
-                                                          action, props["start_time_s"], props["end_time_s"],
+                    await dfxapi.Measurements.ws_add_data(ws, request_id, measurement_id, props["chunk_number"], action,
+                                                          props["start_time_s"], props["end_time_s"],
                                                           props["duration_s"], meta_bytes, payload_bytes)
                     sleep_time = props["duration_s"]
                     print(f"Sent chunk req#:{request_id} - {action} ...waiting {sleep_time:.0f} seconds...")
@@ -406,7 +406,7 @@ async def measure_websocket(session: aiohttp.ClientSession, measurement_id, meas
 
 def cmdline():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--creds_file", default="./creds.json")
+    parser.add_argument("-c", "--config_file", default="./config.json")
     pp_group = parser.add_mutually_exclusive_group()
     pp_group.add_argument("--json", help="Print as JSON", action="store_true", default=False)
     pp_group.add_argument("--csv", help="Print grids as CSV", action="store_true", default=False)
