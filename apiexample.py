@@ -58,9 +58,12 @@ async def main(args):
         print("Please register and/or login first to obtain a token")
         return
 
-    # Use the token to create the headers
-    token = dfxapi.Settings.user_token if dfxapi.Settings.user_token else dfxapi.Settings.device_token
-    headers = {"Authorization": f"Bearer {token}"}
+    # Verify and if necessary, attempt to renew the token
+    verified, renewed, headers, new_config = await verify_renew_token(config)
+    if not verified:
+        save_config(new_config, args.config_file)
+        if not renewed:
+            return
 
     # Create, update, remove profiles
     if args.command == "profile":
@@ -318,9 +321,76 @@ async def logout(config):
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         await dfxapi.Users.logout(session)
         config["user_token"] = dfxapi.Settings.user_token
+        config["user_refresh_token"] = dfxapi.Settings.user_refresh_token
         config["user_id"] = ""
+
         print("Logout successful")
     return True
+
+
+async def verify_renew_token(config):
+    # Use the token to create the headers
+    if dfxapi.Settings.user_token:
+        headers = {"Authorization": f"Bearer {dfxapi.Settings.user_token}"}
+        using_user_token = True
+    else:
+        headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
+        using_user_token = False
+
+    # Verify that our token is still valid and renew if it's not
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=False) as session:
+        status, body = await dfxapi.General.verify_token(session)
+        if status < 400:
+            return True, False, headers, None
+
+        # It's not valid, so attempt to renew it...
+        if using_user_token:
+            renew_status, renew_body = await dfxapi.Auths.renew_user_token(session)
+        else:
+            renew_status, renew_body = await dfxapi.Auths.renew_device_token(session)
+
+        # Renew failed
+        if renew_status >= 400:
+            # Show error from verify_token failure
+            print(f"Your {'user' if using_user_token else 'device'} token could not be verified.")
+            print_pretty(body)
+
+            # Show error from renew_token failure
+            print("Attempted token refresh but failed, please register and/or login again!")
+            print_pretty(renew_body)
+
+            # Erase saved tokens
+            if using_user_token:
+                config["user_token"] = ""
+                config["user_refresh_token"] = ""
+            else:
+                config["device_id"] = ""
+                config["device_token"] = ""
+                config["device_refresh_token"] = ""
+                config["role_id"] = ""
+                config["user_id"] = ""
+
+            # Exit since we cannot continue
+            return False, False, None, config
+
+        # Renew worked, so save new tokens
+        if using_user_token:
+            config["user_token"] = dfxapi.Settings.user_token
+            config["user_refresh_token"] = dfxapi.Settings.user_refresh_token
+
+            # Adjust headers
+            headers = {"Authorization": f"Bearer {dfxapi.Settings.user_token}"}
+        else:
+            config["device_token"] = dfxapi.Settings.device_token
+            config["device_refresh_token"] = dfxapi.Settings.device_refresh_token
+
+            # Adjust headers
+            headers = {"Authorization": f"Bearer {dfxapi.Settings.device_token}"}
+
+        # Continue
+        print("Refreshed token. Continuing with command...")
+
+        return False, True, headers, config
 
 
 async def measure_rest(session, measurement_id, measurement_files):
