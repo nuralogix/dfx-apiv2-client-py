@@ -60,7 +60,7 @@ class Users(Base):
     @classmethod
     async def request_phone_login_code(cls, session: aiohttp.ClientSession, org_key: str, phone_number: str,
                                        **kwargs: Any) -> Any:
-        warnings.warn("request_phone_login_code is deprecated. Please use Auths.request_login_code instead.",
+        warnings.warn("Users.request_phone_login_code is deprecated. Please use Auths.request_login_code instead.",
                       DeprecationWarning)
         return await cls._get(session, f"{cls.url_fragment}/auth/code/{org_key}/{phone_number}", **kwargs)
 
@@ -141,7 +141,7 @@ class Users(Base):
     async def send_password_reset_request(cls, session: aiohttp.ClientSession, email: str, org_id: str,
                                           **kwargs: Any) -> Any:
         warnings.warn(
-            "send_password_reset_request is deprecated. Please use Auths.request_password_reset_email instead.",
+            "Users.send_password_reset_request is deprecated. Please use Auths.request_password_reset_email instead.",
             DeprecationWarning)
         data = {
             "Email": email,
@@ -153,7 +153,7 @@ class Users(Base):
     @classmethod
     async def reset_password(cls, session: aiohttp.ClientSession, reset_token: str, new_password: str,
                              **kwargs: Any) -> Any:
-        warnings.warn("reset_password is deprecated and will be removed in future versions", DeprecationWarning)
+        warnings.warn("Users.reset_password is deprecated and will be removed in future versions", DeprecationWarning)
 
         data = {
             "ResetToken": reset_token,
@@ -199,6 +199,8 @@ class Users(Base):
 
     @classmethod
     async def renew_token(cls, session: aiohttp.ClientSession, license_key: str, **kwargs: Any) -> Any:
+        warnings.warn("Users.renew_token is deprecated. Please use Auths.renew_token instead.", DeprecationWarning)
+
         data = {
             "Key": license_key,
         }
