@@ -1,11 +1,10 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
+import json
 from typing import Any, Tuple, Union
 
 import aiohttp
-
-from dfx_apiv2_protos import util_pb2
 
 from .Settings import Settings
 
@@ -54,15 +53,15 @@ class Base:
         result = msg.data
         request_id = result[:10].decode('utf-8')
         status = int(result[10:13].decode('utf-8'))
-        payload = result[13:]
+        payload = result[13:].decode('utf-8')
 
         # TODO: Handle raise_for_status == False
         if status >= 400:
-            error = util_pb2.Error()
             try:
-                error.ParseFromString(payload)
-            except Exception:
-                pass
+                error = json.loads(payload)
+            except Exception as e:
+                print(ValueError(f"Status {status} for req#:{request_id}, Could parse as JSON error: {e}"))
+                raise
             raise ValueError(f"Status {status} for req#:{request_id}, Code: {error.Code}, Message: '{error.Message}', "
                              f"Description: '{error.Errors}'.")
 

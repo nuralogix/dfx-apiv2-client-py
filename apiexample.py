@@ -13,7 +13,6 @@ import string
 import aiohttp
 
 import dfx_apiv2_client as dfxapi
-from dfx_apiv2_protos.measurements_pb2 import SubscribeResultsResponse
 
 from prettyprint import print_meas, print_pretty
 
@@ -184,7 +183,7 @@ async def main(args):
         print(f"Measurement {measurement_id} complete")
 
         config["last_measurement"] = measurement_id
-        save_config()
+        save_config(config, args.config_file)
 
 
 def load_config(config_file):
@@ -416,7 +415,7 @@ async def measure_rest(session, measurement_id, measurement_files):
 
 async def measure_websocket(session: aiohttp.ClientSession, measurement_id, measurement_files, number_chunks):
     # Use the session to connect to the WebSocket
-    async with session.ws_connect(dfxapi.Settings.ws_url) as ws:
+    async with session.ws_connect(dfxapi.Settings.ws_url, protocols=["json"]) as ws:
         # Auth using `ws_auth_with_token` if headers cannot be manipulated
         if "Authorization" not in session.headers:
             await dfxapi.Organizations.ws_auth_with_token(ws, generate_reqid())
@@ -457,14 +456,11 @@ async def measure_websocket(session: aiohttp.ClientSession, measurement_id, meas
         async def receive_results():
             # Coroutine to receive results
             num_results_received = 0
-            response = SubscribeResultsResponse()
             async for msg in ws:
                 _, request_id, payload = dfxapi.Measurements.ws_decode(msg)
                 if request_id == results_request_id:
-                    response.ParseFromString(payload)  # Parse the payload as a protobuf
-                    decoded_result_lines = str(response).splitlines()  # Just for printing ease...
-                    print(f" Received and decoded result: {decoded_result_lines[0]} "
-                          f"... {len(decoded_result_lines) - 1} more lines ...")
+                    response = json.loads(payload)
+                    print(f" Received and decoded result: {response}")
                     num_results_received += 1
                 if num_results_received == results_expected:
                     await ws.close()

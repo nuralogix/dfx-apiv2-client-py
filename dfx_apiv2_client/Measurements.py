@@ -2,11 +2,10 @@
 # See LICENSE.txt in the project root for license information
 
 import base64
+import json
 from typing import Any, Union
 
 import aiohttp
-
-from dfx_apiv2_protos import measurements_pb2
 
 from .Base import Base
 
@@ -101,13 +100,16 @@ class Measurements(Base):
                                       measurement_id: str, results_request_id: Union[str, int]) -> None:
         action_id = "0510"
 
-        proto = measurements_pb2.SubscribeResultsRequest()
-        proto.RequestID = str(results_request_id)
-        proto.Params.ID = measurement_id
+        request = {
+            "Params": {
+                "ID": measurement_id,
+            },
+            "RequestID": str(results_request_id),
+        }
 
-        ws_request = f"{action_id:4}{request_id:10}".encode() + proto.SerializeToString()
+        ws_request = f"{action_id:4}{request_id:10}{json.dumps(request)}"
 
-        await ws.send_bytes(ws_request)
+        await ws.send_str(ws_request)
 
     @classmethod
     async def ws_add_data(
@@ -125,19 +127,22 @@ class Measurements(Base):
     ) -> None:
         action_id = "0506"
 
-        proto = measurements_pb2.DataRequest()
-        proto.Params.ID = measurement_id
-        proto.ChunkOrder = int(chunk_order)
-        proto.Action = action
-        proto.StartTime = start_time_s
-        proto.EndTime = end_time_s
-        proto.Duration = int(duration_s)
-        proto.Meta = metadata
-        proto.Payload = payload
+        request = {
+            "Params": {
+                "ID": measurement_id,
+            },
+            "ChunkOrder": int(chunk_order),
+            "Action": action,
+            "StartTime": start_time_s,
+            "EndTime": end_time_s,
+            "Duration": int(duration_s),
+            "Meta": base64.standard_b64encode(metadata).decode('ascii'),
+            "Payload": base64.standard_b64encode(payload).decode('ascii'),
+        }
 
-        ws_request = f"{action_id:4}{request_id:10}".encode() + proto.SerializeToString()
+        ws_request = f"{action_id:4}{request_id:10}{json.dumps(request)}"
 
-        await ws.send_bytes(ws_request)
+        await ws.send_str(ws_request)
 
     @classmethod
     async def delete(cls, session: aiohttp.ClientSession, measurement_id: str, **kwargs: Any) -> Any:
