@@ -66,3 +66,7 @@ class Base:
                              f"Description: '{error.Errors}'.")
 
         return status, request_id, payload
+
+    @classmethod
+    def ws_connect(cls, session: aiohttp.ClientSession, **kwargs: Any):
+        return session.ws_connect(Settings.ws_url, protocols=["json"], **kwargs)

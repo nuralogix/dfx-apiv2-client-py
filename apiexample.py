@@ -415,7 +415,7 @@ async def measure_rest(session, measurement_id, measurement_files):
 
 async def measure_websocket(session: aiohttp.ClientSession, measurement_id, measurement_files, number_chunks):
     # Use the session to connect to the WebSocket
-    async with session.ws_connect(dfxapi.Settings.ws_url, protocols=["json"]) as ws:
+    async with dfxapi.Measurements.ws_connect(session) as ws:
         # Auth using `ws_auth_with_token` if headers cannot be manipulated
         if "Authorization" not in session.headers:
             await dfxapi.Organizations.ws_auth_with_token(ws, generate_reqid())
