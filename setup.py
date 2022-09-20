@@ -13,7 +13,7 @@ setup(
     version='0.11.0',
     packages=['dfx_apiv2_client'],
     install_requires=[
-        'aiohttp[speedups]',
+        'aiohttp',
     ],
     setup_requires=['wheel'],
     description='dfx-apiv2-client is a Python 3 asyncio client library for the Nuralogix DeepAffex API.',
