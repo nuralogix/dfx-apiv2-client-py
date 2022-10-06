@@ -49,7 +49,7 @@ class Base:
     @classmethod
     def ws_decode(cls, msg: aiohttp.WSMessage) -> Tuple[int, str, bytes]:
         if msg.type != aiohttp.WSMsgType.BINARY:
-            raise ValueError("Expecting only binary websocket responses")
+            raise ValueError("WebSocket error: Expecting only binary websocket responses")
         result = msg.data
         request_id = result[:10].decode('utf-8')
         status = int(result[10:13].decode('utf-8'))
@@ -60,10 +60,11 @@ class Base:
             try:
                 error = json.loads(payload)
             except Exception as e:
-                print(ValueError(f"Status {status} for req#:{request_id}, Could parse as JSON error: {e}"))
-                raise
-            raise ValueError(f"Status {status} for req#:{request_id}, Code: {error.Code}, Message: '{error.Message}', "
-                             f"Description: '{error.Errors}'.")
+                raise ValueError(
+                    f"WebSocket error: API Status {status} for req#:{request_id}, could not parse response as JSON"
+                ) from e
+            raise ValueError(f"WebSocket error: API Status {status} for req#:{request_id}, Code: {error['Code']}, "
+                             f"Description: '{error['Errors'] if 'Errors' in error else None}'.")
 
         return status, request_id, payload
 
