@@ -6,6 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.11.1] - 2022-10-07
+
+### Fixed
+
+- Fixed `ws_decode` not handling JSON responses
+
 ## [0.11.0] - 2022-09-23
 
 ### Added
@@ -25,6 +31,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - First tagged release on PyPI
 
-[unreleased]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.11.0...HEAD
+[unreleased]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.10.0...v0.11.0
 [0.10.0]:  https://github.com/nuralogix/dfx-apiv2-client-py/releases/tag/v0.10.0
