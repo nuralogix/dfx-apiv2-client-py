@@ -139,26 +139,33 @@ async def main(args):
 
     # 2. Make sure payload files exist
     payload_files = sorted(glob.glob(os.path.join(args.payloads_folder, "payload*.bin")))
-    meta_files = sorted(glob.glob(os.path.join(args.payloads_folder, "metadata*.bin")))
     prop_files = sorted(glob.glob(os.path.join(args.payloads_folder, "properties*.json")))
-    number_files = min(len(payload_files), len(meta_files), len(prop_files))
+    found_props = True if len(prop_files) > 0 else False
+    if not found_props:
+        prop_files = payload_files
+
+    number_files = min(len(payload_files), len(prop_files))
     if number_files <= 0:
         print(f"No payload files found in {args.payloads_folder}")
         return
-    with open(prop_files[0], 'r') as pr:
-        props = json.load(pr)
-        number_chunks_pr = props["number_chunks"]
-        if "duration_s" in props:
-            duration_pr = props["duration_s"]
-        else:
-            duration_pr = props["end_time_s"] - props["start_time_s"]
-            props["duration_s"] = duration_pr
-    if number_chunks_pr != number_files:
-        print(f"Number of chunks in properties.json {number_chunks_pr} != Number of payload files {number_files}")
-        return
-    if duration_pr * number_chunks_pr > 120:
-        print(f"Total payload duration {duration_pr * number_chunks_pr} seconds is more than 120 seconds")
-        return
+    if found_props:
+        with open(prop_files[0], 'r') as pr:
+            props = json.load(pr)
+            number_chunks_pr = props["number_chunks"]
+            if "duration_s" in props:
+                duration_pr = props["duration_s"]
+            else:
+                duration_pr = props["end_time_s"] - props["start_time_s"]
+                props["duration_s"] = duration_pr
+        if number_chunks_pr != number_files:
+            print(f"Number of chunks in properties.json {number_chunks_pr} != Number of payload files {number_files}")
+            return
+        if duration_pr * number_chunks_pr > 120:
+            print(f"Total payload duration {duration_pr * number_chunks_pr} seconds is more than 120 seconds")
+            return
+    else:
+        duration_pr = args.chunk_duration_s
+        number_chunks_pr = number_files
 
     use_websocket = not args.rest
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
@@ -171,14 +178,14 @@ async def main(args):
         measurement_id = create_result["ID"]
         print(f"Created measurement {measurement_id}")
 
-        measurement_files = zip(payload_files, meta_files, prop_files)
+        measurement_files = zip(payload_files, prop_files)
         # Add data to the measurement
         if use_websocket:
             # Make a measurement using WebSocket
-            await measure_websocket(session, measurement_id, measurement_files, number_chunks_pr)
+            await measure_websocket(session, measurement_id, measurement_files, number_chunks_pr, duration_pr, found_props)
         else:
             # Make a measurement using REST (no results are returned)
-            await measure_rest(session, measurement_id, measurement_files)
+            await measure_rest(session, measurement_id, measurement_files, number_chunks_pr, duration_pr, found_props)
 
         print(f"Measurement {measurement_id} complete")
 
@@ -392,28 +399,36 @@ async def verify_renew_token(config):
         return False, True, headers, config
 
 
-async def measure_rest(session, measurement_id, measurement_files):
-    for payload_file, meta_file, prop_file in measurement_files:
-        with open(payload_file, 'rb') as p, open(meta_file, 'rb') as m, open(prop_file, 'r') as pr:
+async def measure_rest(session, measurement_id, measurement_files, number_chunks, duration_args, found_prop_files):
+    for i, (payload_file, prop_file) in enumerate(measurement_files):
+        with open(payload_file, 'rb') as p, open(prop_file, 'r') as pr:
             payload_bytes = p.read()
-            meta_bytes = m.read()
-            props = json.load(pr)
+
+            duration = duration_args
+            if found_prop_files:
+                props = json.load(pr)
+                if "duration_s" not in props:
+                    props["duration_s"] = props["end_time_s"] - props["start_time_s"]
+                duration = props["duration_s"]
+                number_chunks = props["number_chunks"]
+                chunk_number = props["chunk_number"]
+            else:
+                chunk_number = i
 
             # Determine action
-            action = determine_action(props["chunk_number"], props["number_chunks"])
+            action = determine_action(chunk_number, number_chunks)
 
             # Add data
-            add_data_res = await dfxapi.Measurements.add_data(session, measurement_id, props["chunk_number"], action,
-                                                              props["start_time_s"], props["end_time_s"],
-                                                              props["duration_s"], meta_bytes, payload_bytes)
+            status, add_data_res = await dfxapi.Measurements.add_data(session, measurement_id, action, payload_bytes)
             chunkID = add_data_res["ID"]
-            print(f"Sent chunk id#:{chunkID} - {action} ...waiting {props['duration_s']:.0f} seconds...")
+            print(f"Sent chunk id#:{chunkID} - {action} ...waiting {duration:.0f} seconds...")
 
             # Sleep to simulate a live measurement and not hit the rate limit
-            await asyncio.sleep(props["duration_s"])
+            await asyncio.sleep(duration)
 
 
-async def measure_websocket(session: aiohttp.ClientSession, measurement_id, measurement_files, number_chunks):
+async def measure_websocket(session: aiohttp.ClientSession, measurement_id, measurement_files, number_chunks,
+                            duration_args, found_prop_files):
     # Use the session to connect to the WebSocket
     async with dfxapi.Measurements.ws_connect(session) as ws:
         # Auth using `ws_auth_with_token` if headers cannot be manipulated
@@ -429,25 +444,30 @@ async def measure_websocket(session: aiohttp.ClientSession, measurement_id, meas
         results_expected = number_chunks
 
         async def send_chunks():
+            number_chunks = results_expected
             # Coroutine to iterate through the payload files and send chunks using WebSocket
-            for payload_file, meta_file, prop_file in measurement_files:
-                with open(payload_file, 'rb') as p, open(meta_file, 'rb') as m, open(prop_file, 'r') as pr:
+            for i, (payload_file, prop_file) in enumerate(measurement_files):
+                with open(payload_file, 'rb') as p, open(prop_file, 'r') as pr:
                     payload_bytes = p.read()
-                    meta_bytes = m.read()
-                    props = json.load(pr)
 
-                    if "duration_s" not in props:
-                        props["duration_s"] = props["end_time_s"] - props["start_time_s"]
+                    duration = duration_args
+                    if found_prop_files:
+                        props = json.load(pr)
+                        if "duration_s" not in props:
+                            props["duration_s"] = props["end_time_s"] - props["start_time_s"]
+                        duration = props["duration_s"]
+                        number_chunks = props["number_chunks"]
+                        chunk_number = props["chunk_number"]
+                    else:
+                        chunk_number = i
 
                     # Determine action and request id
-                    action = determine_action(props["chunk_number"], props["number_chunks"])
+                    action = determine_action(chunk_number, number_chunks)
                     request_id = generate_reqid()
 
                     # Add data
-                    await dfxapi.Measurements.ws_add_data(ws, request_id, measurement_id, props["chunk_number"], action,
-                                                          props["start_time_s"], props["end_time_s"],
-                                                          props["duration_s"], meta_bytes, payload_bytes)
-                    sleep_time = props["duration_s"]
+                    await dfxapi.Measurements.ws_add_data(ws, request_id, measurement_id, action, payload_bytes)
+                    sleep_time = max(duration, duration_args)
                     print(f"Sent chunk req#:{request_id} - {action} ...waiting {sleep_time:.0f} seconds...")
 
                     # Sleep to simulate a live measurement and not hit the rate limit
@@ -529,6 +549,9 @@ def cmdline():
     make_parser.add_argument("--user_profile_id", help="Set the Profile ID (Participant ID)", type=str, default="")
     make_parser.add_argument("--partner_id", help="Set the PartnerID", type=str, default="")
     make_parser.add_argument("--stream", help="Make a streaming measurement", action="store_true", default=False)
+    make_parser.add_argument("--chunk_duration_s",
+                             help="Chunk duration to use when no property files in payloads folder",
+                             default=5.0)
     list_parser = subparser_meas.add_parser("list", help="List existing measurements")
     list_parser.add_argument("--limit", help="Number of measurements to retrieve (default 1)", type=int, default=1)
     list_parser.add_argument("--profile_id", help="Filter list by Profile ID", type=str, default="")

@@ -3,7 +3,7 @@
 
 import base64
 import json
-from typing import Any, Union
+from typing import Any, Union, Optional
 
 import aiohttp
 
@@ -37,23 +37,25 @@ class Measurements(Base):
     async def add_data(cls,
                        session: aiohttp.ClientSession,
                        measurement_id: str,
-                       chunk_order: Union[str, int],
                        action: str,
-                       start_time_s: str,
-                       end_time_s: str,
-                       duration_s: str,
-                       metadata: Union[bytes, bytearray, memoryview],
                        payload: Union[bytes, bytearray, memoryview],
+                       *,
+                       chunk_order: Optional[Union[str, int]] = None,
+                       start_time_s: Optional[str] = None,
+                       end_time_s: Optional[str] = None,
+                       duration_s: Optional[str] = None,
+                       metadata: Optional[Union[bytes, bytearray, memoryview]] = None,
                        **kwargs: Any) -> Any:
         data = {
-            "ChunkOrder": chunk_order,
+            "ChunkOrder": int(chunk_order) if chunk_order is not None else None,
             "Action": action,
             "StartTime": start_time_s,
             "EndTime": end_time_s,
-            "Duration": duration_s,
-            "Meta": base64.standard_b64encode(metadata).decode('ascii'),
+            "Duration": int(duration_s) if duration_s is not None else None,
+            "Meta": base64.standard_b64encode(metadata).decode('ascii') if metadata else None,
             "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
+        data = {k: v for k, v in data.items() if v is not None}
 
         return await cls._post(session, f"{cls.url_fragment}/{measurement_id}/data", data=data, **kwargs)
 
@@ -117,13 +119,14 @@ class Measurements(Base):
         ws: aiohttp.ClientWebSocketResponse,
         request_id: str,
         measurement_id: str,
-        chunk_order: Union[str, int],
         action: str,
-        start_time_s: str,
-        end_time_s: str,
-        duration_s: str,
-        metadata: Union[bytes, bytearray, memoryview],
         payload: Union[bytes, bytearray, memoryview],
+        *,
+        chunk_order: Optional[Union[str, int]] = None,
+        start_time_s: Optional[str] = None,
+        end_time_s: Optional[str] = None,
+        duration_s: Optional[str] = None,
+        metadata: Optional[Union[bytes, bytearray, memoryview]] = None,
     ) -> None:
         action_id = "0506"
 
@@ -131,14 +134,15 @@ class Measurements(Base):
             "Params": {
                 "ID": measurement_id,
             },
-            "ChunkOrder": int(chunk_order),
+            "ChunkOrder": int(chunk_order) if chunk_order is not None else None,
             "Action": action,
             "StartTime": start_time_s,
             "EndTime": end_time_s,
-            "Duration": int(duration_s),
-            "Meta": base64.standard_b64encode(metadata).decode('ascii'),
+            "Duration": int(duration_s) if duration_s is not None else None,
+            "Meta": base64.standard_b64encode(metadata).decode('ascii') if metadata else None,
             "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
+        request = {k: v for k, v in request.items() if v is not None}
 
         ws_request = f"{action_id:4}{request_id:10}{json.dumps(request)}"
 
