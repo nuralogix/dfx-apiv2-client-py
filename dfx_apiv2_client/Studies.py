@@ -65,7 +65,7 @@ class Studies(Base):
     @classmethod
     async def list(cls, session: aiohttp.ClientSession, status: str = "", **kwargs: Any) -> Any:
         params = {
-            "Status": status,
+            "StatusID": status.upper(),
         }
 
         return await cls._get(session, cls.url_fragment, params=params, **kwargs)
@@ -83,4 +83,3 @@ class Studies(Base):
 
     async def delete_study_measurements(cls, session: aiohttp.ClientSession, study_id: str, **kwargs: Any) -> Any:
         return await cls._delete(session, f"{cls.url_fragment}/{study_id}/measurements", **kwargs)
-
