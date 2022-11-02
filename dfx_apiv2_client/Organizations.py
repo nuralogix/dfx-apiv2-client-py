@@ -3,6 +3,7 @@
 
 import base64
 import json
+import warnings
 from typing import Any, Union
 
 import aiohttp
@@ -308,9 +309,15 @@ class Organizations(Base):
 
     @classmethod
     async def delete_all_measurements(cls, session: aiohttp.ClientSession, org_id: str, **kwargs: Any) -> Any:
+        warnings.warn(f"{cls.delete_all_measurements.__qualname__} is deprecated and will be removed.",
+                      DeprecationWarning)
+
         return await cls._delete(session, f"{cls.url_fragment}/{org_id}/measurements", **kwargs)
 
     @classmethod
     async def delete_measurements_by_partnerid(cls, session: aiohttp.ClientSession, org_id: str, partner_id: str,
                                                **kwargs: Any) -> Any:
+        warnings.warn(f"{cls.delete_measurements_by_partnerid.__qualname__} is deprecated and will be removed.",
+                      DeprecationWarning)
+
         return await cls._delete(session, f"{cls.url_fragment}/{org_id}/partners/{partner_id}/measurements", **kwargs)

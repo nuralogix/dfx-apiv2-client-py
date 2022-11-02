@@ -1,6 +1,7 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
+import warnings
 from typing import Any
 
 import aiohttp
@@ -80,10 +81,14 @@ class Devices(Base):
 
     @classmethod
     async def delete(cls, session: aiohttp.ClientSession, device_id: str, **kwargs: Any) -> Any:
+        warnings.warn(f"{cls.delete.__qualname__} is deprecated and will be removed.", DeprecationWarning)
+
         return await cls._delete(session, f"{cls.url_fragment}/{device_id}", **kwargs)
 
     @classmethod
     async def delete_measurements(cls, session: aiohttp.ClientSession, device_id: str, **kwargs: Any) -> Any:
+        warnings.warn(f"{cls.delete_measurements.__qualname__} is deprecated and will be removed.", DeprecationWarning)
+
         return await cls._delete(session, f"{cls.url_fragment}/{device_id}/measurements", **kwargs)
 
     @classmethod

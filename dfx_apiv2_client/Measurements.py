@@ -3,6 +3,7 @@
 
 import base64
 import json
+import warnings
 from typing import Any, Union, Optional
 
 import aiohttp
@@ -150,4 +151,6 @@ class Measurements(Base):
 
     @classmethod
     async def delete(cls, session: aiohttp.ClientSession, measurement_id: str, **kwargs: Any) -> Any:
+        warnings.warn(f"{cls.delete.__qualname__} is deprecated and will be removed.", DeprecationWarning)
+
         return await cls._delete(session, f"{cls.url_fragment}/{measurement_id}", **kwargs)
