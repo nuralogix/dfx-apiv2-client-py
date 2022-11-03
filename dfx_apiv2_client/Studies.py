@@ -1,6 +1,7 @@
 # Copyright (c) Nuralogix. All rights reserved. Licensed under the MIT license.
 # See LICENSE.txt in the project root for license information
 
+import warnings
 from typing import Any, Optional
 
 import aiohttp
@@ -65,7 +66,7 @@ class Studies(Base):
     @classmethod
     async def list(cls, session: aiohttp.ClientSession, status: str = "", **kwargs: Any) -> Any:
         params = {
-            "Status": status,
+            "StatusID": status.upper(),
         }
 
         return await cls._get(session, cls.url_fragment, params=params, **kwargs)
@@ -81,6 +82,9 @@ class Studies(Base):
 
         return await cls._post(session, f"{cls.url_fragment}/sdkconfig", data=data, **kwargs)
 
+    @classmethod
     async def delete_study_measurements(cls, session: aiohttp.ClientSession, study_id: str, **kwargs: Any) -> Any:
-        return await cls._delete(session, f"{cls.url_fragment}/{study_id}/measurements", **kwargs)
+        warnings.warn(f"{cls.delete_study_measurements.__qualname__} is deprecated and will be removed.",
+                      DeprecationWarning)
 
+        return await cls._delete(session, f"{cls.url_fragment}/{study_id}/measurements", **kwargs)
