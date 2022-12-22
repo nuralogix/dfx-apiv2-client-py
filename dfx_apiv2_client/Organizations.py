@@ -171,6 +171,7 @@ class Organizations(Base):
                                 study_id: str = "",
                                 status_id: str = "",
                                 email: str = "",
+                                partner_id: str = "",
                                 limit: int = 50,
                                 offset: int = 0,
                                 **kwargs: Any) -> Any:
@@ -181,7 +182,8 @@ class Organizations(Base):
             "UserProfileName": user_profile_name,
             "StudyID": study_id,
             "StatusID": status_id,
-            "Username": email,
+            "UserName": email,
+            "PartnerID": partner_id,
             "Limit": limit,
             "Offset": offset,
         }

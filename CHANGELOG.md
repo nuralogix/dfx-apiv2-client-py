@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Added missing `partner_id` parameter in `Organizations.list_measurements`
+- `email` parameter in `Organizations.list_measurements`
+
 ## [0.12.0] - 2022-11-03
 
 ### Fixed
