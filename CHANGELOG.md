@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Removed
+
+- Removed experimental `streaming` mode from `Measurements.create`
+
 ## [0.13.0] - 2022-12-22
 
 ### Fixed
