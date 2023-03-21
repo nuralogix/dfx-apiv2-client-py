@@ -21,7 +21,6 @@ class Measurements(Base):
                      resolution: int = 0,
                      user_profile_id: str = "",
                      partner_id: str = "",
-                     streaming: bool = False,
                      **kwargs: Any) -> Any:
         data = {
             "StudyID": study_id,
@@ -29,8 +28,6 @@ class Measurements(Base):
             "UserProfileID": user_profile_id,
             "PartnerID": partner_id,
         }
-        if streaming:
-            data["Mode"] = "STREAMING"
 
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
 

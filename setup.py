@@ -10,7 +10,7 @@ setup(
     name='dfx-apiv2-client',
     author="NuraLogix Corporation",
     url='https://github.com/nuralogix/dfx-apiv2-client-py',
-    version='0.13.0',
+    version='0.14.0',
     packages=['dfx_apiv2_client'],
     install_requires=[
         'aiohttp<4',
