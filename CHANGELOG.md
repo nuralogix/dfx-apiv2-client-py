@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.14.0] - 2023-03-21
+
 ### Removed
 
 - Removed experimental `streaming` mode from `Measurements.create`
@@ -62,7 +64,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - First tagged release on PyPI
 
-[unreleased]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.13.0...HEAD
+[unreleased]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/nuralogix/dfx-apiv2-client-py/compare/v0.11.0...v0.11.1
