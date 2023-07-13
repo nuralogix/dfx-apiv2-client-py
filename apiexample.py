@@ -173,8 +173,7 @@ async def main(args):
         _, create_result = await dfxapi.Measurements.create(session,
                                                             config["selected_study"],
                                                             user_profile_id=args.user_profile_id,
-                                                            partner_id=args.partner_id,
-                                                            streaming=args.stream)
+                                                            partner_id=args.partner_id)
         measurement_id = create_result["ID"]
         print(f"Created measurement {measurement_id}")
 
@@ -548,7 +547,6 @@ def cmdline():
     make_parser.add_argument("--rest", help="Use REST instead of WebSocket (no results returned)", action="store_true")
     make_parser.add_argument("--user_profile_id", help="Set the Profile ID (Participant ID)", type=str, default="")
     make_parser.add_argument("--partner_id", help="Set the PartnerID", type=str, default="")
-    make_parser.add_argument("--stream", help="Make a streaming measurement", action="store_true", default=False)
     make_parser.add_argument("--chunk_duration_s",
                              help="Chunk duration to use when no property files in payloads folder",
                              default=5.0)
