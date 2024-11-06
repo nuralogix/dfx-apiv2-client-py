@@ -59,20 +59,22 @@ class Devices(Base):
                    device_type_id: str = "",
                    device_name: str = "",
                    device_version: str = "",
+                   license_id: str = "",
                    date: str = "",
                    end_date: str = "",
-                   unique: bool = False,
+                   sort_order: str = "",
                    limit: int = 25,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
         params = {
             "StatusID": status_id,
             "DeviceTypeID": device_type_id,
+            "LicenseID": license_id,
             "Name": device_name,  # TODO: Verify docs
             "Version": device_version,
             "Date": date,
             "EndDate": end_date,
-            "Unique": "true" if unique else "",
+            "SortOrder": sort_order.upper(),
             "Limit": limit,
             "Offset": offset,
         }
@@ -93,4 +95,4 @@ class Devices(Base):
 
     @classmethod
     async def retrieve_license_id(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
-        return await cls._get(session, f"{cls.url_fragment}/licenses", **kwargs)
+        return await cls._get(session, f"{cls.url_fragment}/license", **kwargs)

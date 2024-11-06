@@ -42,12 +42,20 @@ class Users(Base):
         return await cls._post(session, cls.url_fragment, data=data, **kwargs)
 
     @classmethod
-    async def login(cls, session: aiohttp.ClientSession, email: str, password: str, mfa_token: str = "",
+    async def login(cls,
+                    session: aiohttp.ClientSession,
+                    email: str,
+                    password: str,
+                    mfa_token: str = "",
+                    token_expires_in_sec: int = 0,
+                    refresh_token_expires_in_sec: int = 0,
                     **kwargs: Any) -> Any:
         data = {
             "Email": email,
             "Password": password,
             "MFAToken": mfa_token,
+            "TokenExpiresIn": token_expires_in_sec if token_expires_in_sec > 0 else 86400,
+            "RefreshTokenExpiresIn": refresh_token_expires_in_sec if refresh_token_expires_in_sec > 0 else 2592000
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)
@@ -67,12 +75,20 @@ class Users(Base):
         return await cls._get(session, f"{cls.url_fragment}/auth/code/{org_key}/{phone_number}", **kwargs)
 
     @classmethod
-    async def login_with_phone_code(cls, session: aiohttp.ClientSession, org_key: str, phone_number: str,
-                                    login_code: str, **kwargs: Any) -> Any:
+    async def login_with_phone_code(cls,
+                                    session: aiohttp.ClientSession,
+                                    org_key: str,
+                                    phone_number: str,
+                                    login_code: str,
+                                    token_expires_in_sec: int = 0,
+                                    refresh_token_expires_in_sec: int = 0,
+                                    **kwargs: Any) -> Any:
         data = {
             "LoginCode": login_code,
             "PhoneNumber": phone_number,
             "OrgKey": org_key,
+            "TokenExpiresIn": token_expires_in_sec if token_expires_in_sec > 0 else 86400,
+            "RefreshTokenExpiresIn": refresh_token_expires_in_sec if refresh_token_expires_in_sec > 0 else 2592000
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/auth/code", data=data, **kwargs)

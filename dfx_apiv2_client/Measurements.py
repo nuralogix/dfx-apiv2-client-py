@@ -45,12 +45,7 @@ class Measurements(Base):
                        metadata: Optional[Union[bytes, bytearray, memoryview]] = None,
                        **kwargs: Any) -> Any:
         data = {
-            "ChunkOrder": int(chunk_order) if chunk_order is not None else None,
             "Action": action,
-            "StartTime": start_time_s,
-            "EndTime": end_time_s,
-            "Duration": int(duration_s) if duration_s is not None else None,
-            "Meta": base64.standard_b64encode(metadata).decode('ascii') if metadata else None,
             "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
         data = {k: v for k, v in data.items() if v is not None}
@@ -67,6 +62,7 @@ class Measurements(Base):
                    study_id: str = "",
                    status_id: str = "",
                    partner_id: str = "",
+                   mode: str = "",
                    limit: int = 50,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
@@ -76,8 +72,9 @@ class Measurements(Base):
             "UserProfileID": user_profile_id,
             "UserProfileName": user_profile_name,
             "StudyID": study_id,
-            "StatusID": status_id,
+            "StatusID": status_id.upper(),
             "PartnerID": partner_id,
+            "Mode": mode,
             "Limit": limit,
             "Offset": offset,
         }
@@ -151,3 +148,11 @@ class Measurements(Base):
         warnings.warn(f"{cls.delete.__qualname__} is deprecated and will be removed.", DeprecationWarning)
 
         return await cls._delete(session, f"{cls.url_fragment}/{measurement_id}", **kwargs)
+
+    @classmethod
+    async def retrieve_intermediate(cls,
+                       session: aiohttp.ClientSession,
+                       measurement_id: str,
+                       chunk_order: int,
+                       **kwargs: Any) -> Any:
+        return await cls._get(session, f"{cls.url_fragment}/{measurement_id}/results/{chunk_order}", **kwargs)

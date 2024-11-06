@@ -399,31 +399,53 @@ async def verify_renew_token(config):
 
 
 async def measure_rest(session, measurement_id, measurement_files, number_chunks, duration_args, found_prop_files):
-    for i, (payload_file, prop_file) in enumerate(measurement_files):
-        with open(payload_file, 'rb') as p, open(prop_file, 'r') as pr:
-            payload_bytes = p.read()
+    results_expected = number_chunks
 
-            duration = duration_args
-            if found_prop_files:
-                props = json.load(pr)
-                if "duration_s" not in props:
-                    props["duration_s"] = props["end_time_s"] - props["start_time_s"]
-                duration = props["duration_s"]
-                number_chunks = props["number_chunks"]
-                chunk_number = props["chunk_number"]
-            else:
-                chunk_number = i
+    async def send_chunks():
+        for i, (payload_file, prop_file) in enumerate(measurement_files):
+            with open(payload_file, 'rb') as p, open(prop_file, 'r') as pr:
+                payload_bytes = p.read()
 
-            # Determine action
-            action = determine_action(chunk_number, number_chunks)
+                duration = duration_args
+                if found_prop_files:
+                    props = json.load(pr)
+                    if "duration_s" not in props:
+                        props["duration_s"] = props["end_time_s"] - props["start_time_s"]
+                    duration = props["duration_s"]
+                    number_chunks = props["number_chunks"]
+                    chunk_number = props["chunk_number"]
+                else:
+                    chunk_number = i
 
-            # Add data
-            status, add_data_res = await dfxapi.Measurements.add_data(session, measurement_id, action, payload_bytes)
-            chunkID = add_data_res["ID"]
-            print(f"Sent chunk id#:{chunkID} - {action} ...waiting {duration:.0f} seconds...")
+                # Determine action
+                action = determine_action(chunk_number, number_chunks)
 
+                # Add data
+                status, add_data_res = await dfxapi.Measurements.add_data(session, measurement_id, action, payload_bytes)
+                chunkID = add_data_res["ID"]
+                print(f"Sent chunk id#:{chunkID} - {action} ...waiting {duration:.0f} seconds...")
+
+                # Sleep to simulate a live measurement and not hit the rate limit
+                await asyncio.sleep(duration)
+
+    async def receive_results():
+        # Coroutine to receive results
+        num_results_received = 0
+
+        # receive results via polling REST every 5 seconds
+        while num_results_received < results_expected:
             # Sleep to simulate a live measurement and not hit the rate limit
-            await asyncio.sleep(duration)
+            await asyncio.sleep(5)
+
+            status, response = await dfxapi.Measurements.retrieve_intermediate(session, measurement_id, num_results_received)
+            if response != {}:
+                print(f" Received and decoded result: {response}")
+                num_results_received += 1
+            else:
+                print("Too early", response)
+
+    # Start the two coroutines and await till they finish
+    await asyncio.gather(send_chunks(), receive_results())
 
 
 async def measure_websocket(session: aiohttp.ClientSession, measurement_id, measurement_files, number_chunks,
