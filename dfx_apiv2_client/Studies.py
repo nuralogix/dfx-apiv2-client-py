@@ -26,7 +26,7 @@ class Studies(Base):
                              type_: str,
                              sort_order: str = "",
                              sort_key: str = "",
-                             limit: int = 0,
+                             limit: int = 25,
                              offset: int = 0,
                              **kwargs: Any) -> Any:
         params = {
@@ -84,7 +84,7 @@ class Studies(Base):
                    end_date: str = "",
                    study_name: str = "",
                    status: str = "",
-                   limit: int = 0,
+                   limit: int = 25,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
         params = {

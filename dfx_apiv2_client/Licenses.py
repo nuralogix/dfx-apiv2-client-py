@@ -19,7 +19,7 @@ class Licenses(Base):
                    status_id: str = "",
                    license_type_id: str = "",
                    license_type: str = "",
-                   limit: int = 0,
+                   limit: int = 25,
                    offset: int = 0,
                    **kwargs: Any) -> Any:
         params = {
