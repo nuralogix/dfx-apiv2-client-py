@@ -27,20 +27,6 @@ class Organizations(Base):
                      contact_name: str = "",
                      contact_email: str = "",
                      logo: Union[None, bytes, bytearray, memoryview] = None,
-                     status_id: str = "",
-                     pwd_minlength: int = 6,
-                     admin_pwd_minlength: int = 7,
-                     pwd_required_char_classes: int = 3,
-                     pwd_require_uppercase: bool = False,
-                     pwd_require_lowercase: bool = False,
-                     pwd_require_digits: bool = False,
-                     pwd_require_special_chars: bool = False,
-                     pwd_limit_login_attempts_count_per_window: int = 0,
-                     pwd_limit_login_attempts_window_seconds: int = 0,
-                     session_max_duration_seconds: int = 0,
-                     session_idle_duration_seconds: int = 0,
-                     pwd_rotate_days: int = 90,
-                     pwd_required_unique_count: int = 5,
                      **kwargs: Any) -> Any:
         data = {
             "Name": org_name,
@@ -48,20 +34,6 @@ class Organizations(Base):
             "Contact": contact_name,
             "Email": contact_email,
             "Logo": base64.standard_b64encode(logo).decode('ascii') if logo is not None else logo,
-            "StatusID": status_id,
-            "PasswordMinLength": pwd_minlength,
-            "AdminPasswordMinLength": admin_pwd_minlength,
-            "PasswordRequireCharacterClasses": pwd_required_char_classes,
-            "PasswordRequireUppercase": pwd_require_uppercase,
-            "PasswordRequireLowercase": pwd_require_lowercase,
-            "PasswordRequireDigits": pwd_require_digits,
-            "PasswordRequireSpecial": pwd_require_special_chars,
-            "PLimitLoginAttemptsCountPerWindow": pwd_limit_login_attempts_count_per_window,
-            "PLimitLoginAttemptsWindowSeconds": pwd_limit_login_attempts_window_seconds,
-            "SessionMaxDurationSeconds": session_max_duration_seconds,
-            "SessionIdleDurationSeconds": session_idle_duration_seconds,
-            "PasswordRotateDays": pwd_rotate_days,
-            "RequireUniquePasswordsCount": pwd_required_unique_count,
         }
         return await cls._patch(session, cls.url_fragment, data=data, **kwargs)
 
@@ -73,17 +45,17 @@ class Organizations(Base):
                          email: str = "",
                          role_id: str = "",
                          gender: str = "",
-                         status_id: str = "",
+                         region: str = "",
                          limit: int = 25,
                          offset: int = 0,
                          **kwargs: Any) -> Any:
         params = {
-            "StartDate": start_date,
+            "Date": start_date,
             "EndDate": end_date,
             "Username": email,
             "RoleID": role_id,
             "Gender": gender,
-            "StatusID": status_id,
+            "Region": region.lower(),
             "Limit": limit,
             "Offset": offset,
         }
@@ -121,17 +93,18 @@ class Organizations(Base):
                                app_version: str,
                                token_expires_in_seconds: int = 0,
                                token_subject: str = "",
+                               refresh_token_expires_in_sec: int = 0,
                                **kwargs: Any) -> Any:
         data = {
             "Key": license_key,
             "DeviceTypeID": device_type_id,  # TODO: Describe list of allowed values here and in params below
             "Name": app_name,
             "Identifier": app_id,
-            "Version": app_version,
-            "TokenSubject": token_subject
+            "Version": app_version[:20],
+            "TokenSubject": token_subject,
+            "TokenExpiresIn": token_expires_in_seconds if token_expires_in_seconds > 0 else 86400,
+            "RefreshTokenExpiresIn": refresh_token_expires_in_sec if refresh_token_expires_in_sec > 0 else 2592000
         }
-        if token_expires_in_seconds > 0:
-            data["TokenExpiresIn"] = token_expires_in_seconds
 
         status, body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data, **kwargs)
 
@@ -172,6 +145,8 @@ class Organizations(Base):
                                 status_id: str = "",
                                 email: str = "",
                                 partner_id: str = "",
+                                mode: str = "",
+                                region: str = "",
                                 limit: int = 50,
                                 offset: int = 0,
                                 **kwargs: Any) -> Any:
@@ -184,6 +159,8 @@ class Organizations(Base):
             "StatusID": status_id,
             "UserName": email,
             "PartnerID": partner_id,
+            "Mode": mode.upper(),
+            "Region": region.lower(),
             "Limit": limit,
             "Offset": offset,
         }
@@ -205,19 +182,21 @@ class Organizations(Base):
     async def list_profiles(
         cls,
         session: aiohttp.ClientSession,
+        date: str = "",
+        end_date: str = "",
         owner_email: str = "",
         user_profile_name: str = "",
         status_id: str = "",
-        created_date: str = "",
         limit: int = 25,
         offset: int = 0,
         **kwargs: Any,
     ) -> Any:
         params = {
+            "Date": date,
+            "EndDate": end_date,
             "OwnerUser": owner_email,
             "UserProfileName": user_profile_name,
             "StatusID": status_id,
-            "Created": created_date,
             "Limit": limit,
             "Offset": offset,
         }
@@ -281,12 +260,16 @@ class Organizations(Base):
                     password: str,
                     org_id: str,
                     mfa_token: str = "",
+                    token_expires_in_sec: int = 0,
+                    refresh_token_expires_in_sec: int = 0,
                     **kwargs: Any) -> Any:
         data = {
             "Email": email,
             "Password": password,
             "Identifier": org_id,
             "MFAToken": mfa_token,
+            "TokenExpiresIn": token_expires_in_sec if token_expires_in_sec > 0 else 86400,
+            "RefreshTokenExpiresIn": refresh_token_expires_in_sec if refresh_token_expires_in_sec > 0 else 2592000
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/auth", data=data, **kwargs)

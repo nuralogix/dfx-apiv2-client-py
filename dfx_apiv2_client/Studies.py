@@ -15,15 +15,27 @@ class Studies(Base):
     @classmethod
     async def types(cls, session: aiohttp.ClientSession, status: str, **kwargs: Any) -> Any:
         params = {
-            "Status": status,
+            "StatusID": status,
         }
         return await cls._get(session, f"{cls.url_fragment}/types", params=params, **kwargs)
 
     @classmethod
-    async def list_templates(cls, session: aiohttp.ClientSession, status: str, type_: str, **kwargs: Any) -> Any:
+    async def list_templates(cls,
+                             session: aiohttp.ClientSession,
+                             status: str,
+                             type_: str,
+                             sort_order: str = "",
+                             sort_key: str = "",
+                             limit: int = 25,
+                             offset: int = 0,
+                             **kwargs: Any) -> Any:
         params = {
             "Status": status,
             "Type": type_,
+            "SortOrder": sort_order.upper(),
+            "SortBy": sort_key,
+            "Limit": limit,
+            "Offset": offset,
         }
         return await cls._get(session, f"{cls.url_fragment}/templates", params=params, **kwargs)
 
@@ -45,10 +57,12 @@ class Studies(Base):
                      study_id: str,
                      study_name: str = "",
                      description: str = "",
+                     status: str = "",
                      config: Optional[dict] = None,
                      **kwargs: Any) -> Any:
         data = {
             "Name": study_name,
+            "StatusID": status.upper(),
             "Description": description,
             "Config": config,
         }
@@ -64,9 +78,22 @@ class Studies(Base):
         return await cls._delete(session, f"{cls.url_fragment}/{study_id}", **kwargs)
 
     @classmethod
-    async def list(cls, session: aiohttp.ClientSession, status: str = "", **kwargs: Any) -> Any:
+    async def list(cls,
+                   session: aiohttp.ClientSession,
+                   date: str = "",
+                   end_date: str = "",
+                   study_name: str = "",
+                   status: str = "",
+                   limit: int = 25,
+                   offset: int = 0,
+                   **kwargs: Any) -> Any:
         params = {
+            "Date": date,
+            "EndDate": end_date,
+            "Name": study_name,
             "StatusID": status.upper(),
+            "Limit": limit,
+            "Offset": offset,
         }
 
         return await cls._get(session, cls.url_fragment, params=params, **kwargs)
