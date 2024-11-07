@@ -55,7 +55,7 @@ class Organizations(Base):
             "Username": email,
             "RoleID": role_id,
             "Gender": gender,
-            "Region": region,
+            "Region": region.lower(),
             "Limit": limit,
             "Offset": offset,
         }
