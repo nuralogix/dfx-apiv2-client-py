@@ -159,8 +159,8 @@ class Organizations(Base):
             "StatusID": status_id,
             "UserName": email,
             "PartnerID": partner_id,
-            "Mode": mode,
-            "Region": region,
+            "Mode": mode.upper(),
+            "Region": region.lower(),
             "Limit": limit,
             "Offset": offset,
         }

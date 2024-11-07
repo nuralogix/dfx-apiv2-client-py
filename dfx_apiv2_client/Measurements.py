@@ -74,7 +74,7 @@ class Measurements(Base):
             "StudyID": study_id,
             "StatusID": status_id.upper(),
             "PartnerID": partner_id,
-            "Mode": mode,
+            "Mode": mode.upper(),
             "Limit": limit,
             "Offset": offset,
         }
