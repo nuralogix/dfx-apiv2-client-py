@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dfx-apiv2-client"
+version = "0.16.0"
+description = "dfx-apiv2-client is a Python 3 asyncio client library for the Nuralogix DeepAffex API."
+readme = "README.md"
+authors = [
+    { name = "NuraLogix Corporation" }
+]
+license = "MIT"
+license-files = ["LICENSE.txt"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp<4"
+]
+
+[project.urls]
+Homepage = "https://github.com/nuralogix/dfx-apiv2-client-py"
+
+[tool.setuptools]
+packages = ["dfx_apiv2_client"]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["ANN101", "ANN102"]
+
+[tool.yapf]
+based_on_style = "pep8"
+column_limit = 120

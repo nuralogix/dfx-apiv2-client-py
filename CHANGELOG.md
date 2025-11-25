@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Updated packaging to use pyproject.toml
+- Changed minimum Python version to 3.9
+
 ## [0.15.0] - 2024-11-15
 
 ### Added
