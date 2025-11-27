@@ -11,6 +11,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Updated packaging to use pyproject.toml
 - Changed minimum Python version to 3.9
 
+### Fixed
+
+- Made unnecessary parameters optional for `Measurements.ws_add_data`
+- Fixed `Auths.request_login_code`
+- Fixed `Users.create_mfa_secret` and `Users.send_account_verification_code`
+
 ## [0.15.0] - 2024-11-15
 
 ### Added
