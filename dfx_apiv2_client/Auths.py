@@ -28,7 +28,7 @@ class Auths(Base):
             "PhoneNumber": phone_number,
             "Identifier": org_id,
         }
-        return await cls._patch(session, f"{cls.url_fragment}/users/code", data=data, **kwargs)
+        return await cls._post(session, f"{cls.url_fragment}/users/code", data=data, **kwargs)
 
     @classmethod
     async def renew_token(cls,

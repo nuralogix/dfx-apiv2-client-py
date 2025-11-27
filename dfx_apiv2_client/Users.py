@@ -132,7 +132,7 @@ class Users(Base):
 
     @classmethod
     async def create_mfa_secret(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
-        return await cls._post(session, f"{cls.url_fragment}/mfa/secret", **kwargs)
+        return await cls._post(session, f"{cls.url_fragment}/mfa/secret", data=None, **kwargs)
 
     @classmethod
     async def enable_mfa(cls, session: aiohttp.ClientSession, mfa_secret: str, mfa_token: str, **kwargs: Any) -> Any:
@@ -183,7 +183,7 @@ class Users(Base):
     @classmethod
     async def send_account_verification_code(cls, session: aiohttp.ClientSession, user_id: str, org_id: str,
                                              **kwargs: Any) -> Any:
-        return await cls._post(session, f"{cls.url_fragment}/verificationCode/{user_id}/{org_id}", {}, **kwargs)
+        return await cls._get(session, f"{cls.url_fragment}/verificationCode/{user_id}/{org_id}", {}, **kwargs)
 
     @classmethod
     async def verify_user_account(cls, session: aiohttp.ClientSession, verification_code: str, user_id: str,

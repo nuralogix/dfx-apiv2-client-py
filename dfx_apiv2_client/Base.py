@@ -2,7 +2,7 @@
 # See LICENSE.txt in the project root for license information
 
 import json
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Union, Optional
 
 import aiohttp
 
@@ -11,7 +11,7 @@ from .Settings import Settings
 
 class Base:
     @classmethod
-    async def _get(cls, session: aiohttp.ClientSession, url_fragment: str, params: dict = None, **kwargs: Any) -> Any:
+    async def _get(cls, session: aiohttp.ClientSession, url_fragment: str, params: Optional[dict] = None, **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
         async with session.get(url, params=params, **kwargs) as resp:
@@ -21,7 +21,7 @@ class Base:
                 return resp.status, await resp.json()
 
     @classmethod
-    async def _post(cls, session: aiohttp.ClientSession, url_fragment: str, data: Union[dict, list],
+    async def _post(cls, session: aiohttp.ClientSession, url_fragment: str, data: Optional[Union[dict, list]],
                     **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
@@ -39,7 +39,7 @@ class Base:
     async def _delete(cls,
                       session: aiohttp.ClientSession,
                       url_fragment: str,
-                      data: Union[dict, list] = None,
+                      data: Optional[Union[dict, list]] = None,
                       **kwargs: Any) -> Any:
         url = f"{Settings.rest_url}/{url_fragment}"
 
