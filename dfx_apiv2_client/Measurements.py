@@ -129,12 +129,7 @@ class Measurements(Base):
             "Params": {
                 "ID": measurement_id,
             },
-            "ChunkOrder": int(chunk_order) if chunk_order is not None else None,
             "Action": action,
-            "StartTime": start_time_s,
-            "EndTime": end_time_s,
-            "Duration": int(duration_s) if duration_s is not None else None,
-            "Meta": base64.standard_b64encode(metadata).decode('ascii') if metadata else None,
             "Payload": base64.standard_b64encode(payload).decode('ascii'),
         }
         request = {k: v for k, v in request.items() if v is not None}
