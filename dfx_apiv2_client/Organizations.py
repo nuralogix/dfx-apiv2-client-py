@@ -17,6 +17,12 @@ class Organizations(Base):
 
     @classmethod
     async def retrieve(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        """
+        Retrieve information related to the current organization account.
+
+        :param session: The aiohttp ClientSession to use.
+        :return: The response from the API.
+        """
         return await cls._get(session, cls.url_fragment, **kwargs)
 
     @classmethod
@@ -28,6 +34,17 @@ class Organizations(Base):
                      contact_email: str = "",
                      logo: Union[None, bytes, bytearray, memoryview] = None,
                      **kwargs: Any) -> Any:
+        """
+        Update current organization's account general information.
+
+        :param session: The aiohttp ClientSession to use.
+        :param org_name: The new name of the organization.
+        :param org_id: The new identifier of the organization.
+        :param contact_name: The new contact name.
+        :param contact_email: The new contact email.
+        :param logo: The new logo (binary data).
+        :return: The response from the API.
+        """
         data = {
             "Name": org_name,
             "Identifier": org_id,
@@ -49,6 +66,20 @@ class Organizations(Base):
                          limit: int = 25,
                          offset: int = 0,
                          **kwargs: Any) -> Any:
+        """
+        Retrieves a list of users in the current organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param start_date: Filter by account creation start date (YYYY-MM-DD).
+        :param end_date: Filter by account creation end date (YYYY-MM-DD).
+        :param email: Filter by User's email address.
+        :param role_id: Filter by user's Role ID.
+        :param gender: Filter by User's Gender.
+        :param region: Filter by Region.
+        :param limit: The number of users to pull from the list.
+        :param offset: Offset of the results to start at.
+        :return: The response from the API.
+        """
         params = {
             "Date": start_date,
             "EndDate": end_date,
@@ -72,6 +103,18 @@ class Organizations(Base):
                           date_of_birth: str,
                           role_id: str,
                           **kwargs: Any) -> Any:
+        """
+        Create a user within the organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param first_name: The user's first name.
+        :param last_name: The user's last name.
+        :param email: The user's email address.
+        :param gender: The user's gender.
+        :param date_of_birth: The user's date of birth.
+        :param role_id: The user's role ID.
+        :return: The response from the API.
+        """
         data = {
             "FirstName": first_name,
             "LastName": last_name,
@@ -95,6 +138,20 @@ class Organizations(Base):
                                token_subject: str = "",
                                refresh_token_expires_in_sec: int = 0,
                                **kwargs: Any) -> Any:
+        """
+        Exchange a license key for a Device Token Pair.
+
+        :param session: The aiohttp ClientSession to use.
+        :param license_key: The license key.
+        :param device_type_id: The device type ID.
+        :param app_name: The application name.
+        :param app_id: The application identifier.
+        :param app_version: The application version.
+        :param token_expires_in_seconds: The seconds for which the access token will be valid for.
+        :param token_subject: The token subject.
+        :param refresh_token_expires_in_sec: The seconds for which the refresh token will be valid for.
+        :return: The response from the API.
+        """
         data = {
             "Key": license_key,
             "DeviceTypeID": device_type_id,  # TODO: Describe list of allowed values here and in params below
@@ -119,6 +176,12 @@ class Organizations(Base):
 
     @classmethod
     async def unregister_license(cls, session: aiohttp.ClientSession, **kwargs: Any) -> Any:
+        """
+        Decommission a registered device.
+
+        :param session: The aiohttp ClientSession to use.
+        :return: The response from the API.
+        """
         status, body = await cls._delete(session, f"{cls.url_fragment}/licenses", **kwargs)
 
         if status < 400:
@@ -132,6 +195,13 @@ class Organizations(Base):
 
     @classmethod
     async def retrieve_logo(cls, session: aiohttp.ClientSession, org_id: str, **kwargs: Any) -> Any:
+        """
+        Retrieves an Organization logo.
+
+        :param session: The aiohttp ClientSession to use.
+        :param org_id: The Organization ID.
+        :return: The response from the API.
+        """
         return await cls._get(session, f"{cls.url_fragment}/{org_id}/logo", **kwargs)
 
     @classmethod
@@ -150,6 +220,24 @@ class Organizations(Base):
                                 limit: int = 50,
                                 offset: int = 0,
                                 **kwargs: Any) -> Any:
+        """
+        Retrieves all measurements across an Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param date: Measurement creation start date (YYYY-MM-DD).
+        :param end_date: Measurement creation end date (YYYY-MM-DD).
+        :param user_profile_id: Filter by a Profile ID.
+        :param user_profile_name: Filter by a Profile Name.
+        :param study_id: Filter by Study ID.
+        :param status_id: Filter by measurement Status ID.
+        :param email: Filter by User's email address or phone number.
+        :param partner_id: Filter by Partner ID.
+        :param mode: Filter by Mode.
+        :param region: Filter by Region.
+        :param limit: The number of measurements to pull from the list.
+        :param offset: Offset to specify the start of the count.
+        :return: The response from the API.
+        """
         params = {
             "Date": date,
             "EndDate": end_date,
@@ -173,6 +261,14 @@ class Organizations(Base):
                                    measurement_id: str,
                                    expand: bool = True,
                                    **kwargs: Any) -> Any:
+        """
+        Retrieves a measurement across the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param measurement_id: The measurement UUID.
+        :param expand: Whether to expand the results.
+        :return: The response from the API.
+        """
         params = {}
         if expand:
             params["ExpandResults"] = "true"
@@ -191,6 +287,19 @@ class Organizations(Base):
         offset: int = 0,
         **kwargs: Any,
     ) -> Any:
+        """
+        Retrieves Profiles across the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param date: Profile creation start date (YYYY-MM-DD).
+        :param end_date: Profile creation end date (YYYY-MM-DD).
+        :param owner_email: Filter by User's email address or phone number.
+        :param user_profile_name: Filter by Profile Name.
+        :param status_id: Filter by Profile Status ID.
+        :param limit: The number of profiles to pull from the list.
+        :param offset: Offset to specify the start of the count.
+        :return: The response from the API.
+        """
         params = {
             "Date": date,
             "EndDate": end_date,
@@ -205,6 +314,13 @@ class Organizations(Base):
 
     @classmethod
     async def retrieve_profile(cls, session: aiohttp.ClientSession, profile_id: str, **kwargs: Any) -> Any:
+        """
+        Retrieves a Profile across the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param profile_id: The Profile UUID.
+        :return: The response from the API.
+        """
         return await cls._get(session, f"{cls.url_fragment}/profiles/{profile_id}", **kwargs)
 
     @classmethod
@@ -215,6 +331,16 @@ class Organizations(Base):
                              email: str = "",
                              status: str = "",
                              **kwargs: Any) -> Any:
+        """
+        Updates a Profile from the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param profile_id: The Profile ID to perform the update on.
+        :param name: The new name.
+        :param email: The new email.
+        :param status: The new status.
+        :return: The response from the API.
+        """
         data = {
             "Name": name,
             "Email": email,
@@ -225,6 +351,13 @@ class Organizations(Base):
 
     @classmethod
     async def retrieve_user(cls, session: aiohttp.ClientSession, user_id: str, **kwargs: Any) -> Any:
+        """
+        Retrieves a User from the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param user_id: The user account ID.
+        :return: The response from the API.
+        """
         return await cls._get(session, f"{cls.url_fragment}/users/{user_id}", **kwargs)
 
     @classmethod
@@ -238,6 +371,19 @@ class Organizations(Base):
                           height_cm: Union[str, int] = "",
                           weight_kg: Union[str, int] = "",
                           **kwargs: Any) -> Any:
+        """
+        Updates a User from the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param user_id: The user account ID.
+        :param first_name: The new first name.
+        :param last_name: The new last name.
+        :param gender: The new gender.
+        :param date_of_birth: The new date of birth.
+        :param height_cm: The new height in cm.
+        :param weight_kg: The new weight in kg.
+        :return: The response from the API.
+        """
         data = {
             "FirstName": first_name,
             "LastName": last_name,
@@ -251,6 +397,13 @@ class Organizations(Base):
 
     @classmethod
     async def remove_user(cls, session: aiohttp.ClientSession, user_id: str, **kwargs: Any) -> Any:
+        """
+        Removes a User from the Organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param user_id: The user account ID.
+        :return: The response from the API.
+        """
         return await cls._delete(session, f"{cls.url_fragment}/users/{user_id}", **kwargs)
 
     @classmethod
@@ -263,6 +416,18 @@ class Organizations(Base):
                     token_expires_in_sec: int = 0,
                     refresh_token_expires_in_sec: int = 0,
                     **kwargs: Any) -> Any:
+        """
+        Login and obtain a User Token Pair.
+
+        :param session: The aiohttp ClientSession to use.
+        :param email: The user's email.
+        :param password: The user's password.
+        :param org_id: The organization identifier.
+        :param mfa_token: The MFA token (if enabled).
+        :param token_expires_in_sec: The seconds for which the access token will be valid for.
+        :param refresh_token_expires_in_sec: The seconds for which the refresh token will be valid for.
+        :return: The response from the API.
+        """
         data = {
             "Email": email,
             "Password": password,
@@ -282,6 +447,12 @@ class Organizations(Base):
 
     @classmethod
     async def ws_auth_with_token(cls, ws: aiohttp.ClientWebSocketResponse, request_id: Union[str, int]) -> None:
+        """
+        Authenticate via WebSocket using a token.
+
+        :param ws: The WebSocket connection.
+        :param request_id: The request ID.
+        """
         action_id = "0718"
 
         request = {
@@ -294,6 +465,13 @@ class Organizations(Base):
 
     @classmethod
     async def delete_all_measurements(cls, session: aiohttp.ClientSession, org_id: str, **kwargs: Any) -> Any:
+        """
+        Delete all measurements for an organization.
+
+        :param session: The aiohttp ClientSession to use.
+        :param org_id: The organization ID.
+        :return: The response from the API.
+        """
         warnings.warn(f"{cls.delete_all_measurements.__qualname__} is deprecated and will be removed.",
                       DeprecationWarning)
 
@@ -302,6 +480,14 @@ class Organizations(Base):
     @classmethod
     async def delete_measurements_by_partnerid(cls, session: aiohttp.ClientSession, org_id: str, partner_id: str,
                                                **kwargs: Any) -> Any:
+        """
+        Delete measurements by partner ID.
+
+        :param session: The aiohttp ClientSession to use.
+        :param org_id: The organization ID.
+        :param partner_id: The partner ID.
+        :return: The response from the API.
+        """
         warnings.warn(f"{cls.delete_measurements_by_partnerid.__qualname__} is deprecated and will be removed.",
                       DeprecationWarning)
 
