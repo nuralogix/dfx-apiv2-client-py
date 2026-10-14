@@ -11,6 +11,7 @@ import random
 import string
 
 import aiohttp
+import yarl
 
 import dfx_apiv2_client as dfxapi
 
@@ -20,6 +21,15 @@ from prettyprint import print_meas, print_pretty
 async def main(args):
     # Load config
     config = load_config(args.config_file)
+
+    # Check if alternate URL was passed
+    if "rest_url" in args and args.rest_url is not None:
+        url = yarl.URL(args.rest_url).with_path("")
+        dfxapi.Settings.rest_url = str(url)
+        dfxapi.Settings.ws_url = str(url.with_scheme("wss"))
+        config["rest_url"] = dfxapi.Settings.rest_url
+        config["ws_url"] = dfxapi.Settings.ws_url
+
 
     # Check API status
     async with aiohttp.ClientSession(raise_for_status=True) as session:
@@ -33,7 +43,7 @@ async def main(args):
         if args.subcommand == "unregister":
             success = await unregister(config)
         else:
-            success = await register(config, args.license_key)
+            success = await register(config, args.license_key, args.device_id)
 
         if success:
             save_config(config, args.config_file)
@@ -245,7 +255,7 @@ def determine_action(chunk_number, number_chunks):
     return action
 
 
-async def register(config, license_key):
+async def register(config, license_key, device_id=None):
     if dfxapi.Settings.device_token:
         print("Already registered")
         return False
@@ -253,7 +263,7 @@ async def register(config, license_key):
     try:
         async with aiohttp.ClientSession(raise_for_status=True) as session:
             await dfxapi.Organizations.register_license(session, license_key, "LINUX", "DFX Example", "DFXCLIENT",
-                                                        "0.0.1")
+                                                        "0.0.1", device_id=device_id)
             config["device_id"] = dfxapi.Settings.device_id
             config["device_token"] = dfxapi.Settings.device_token
             config["device_refresh_token"] = dfxapi.Settings.device_refresh_token
@@ -369,7 +379,7 @@ async def verify_renew_token(config):
                 config["user_token"] = ""
                 config["user_refresh_token"] = ""
             else:
-                config["device_id"] = ""
+                # config["device_id"] = "" # Don't delete the device_id.
                 config["device_token"] = ""
                 config["device_refresh_token"] = ""
                 config["role_id"] = ""
@@ -523,6 +533,8 @@ def cmdline():
                                                                                           required=True)
     register_parser = subparser_orgs.add_parser("register", help="Register device")
     register_parser.add_argument("license_key", help="DFX API Organization License")
+    register_parser.add_argument("--rest-url", help="Connect to DFX API using this REST URL", default=None)
+    register_parser.add_argument("--device-id", help="Device ID to use for registering (default: Device ID in config)")
     unregister_parser = subparser_orgs.add_parser("unregister", help="Unregister device")
 
     subparser_users = subparser_top.add_parser("user", help="Users").add_subparsers(dest="subcommand", required=True)
