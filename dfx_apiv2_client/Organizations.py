@@ -4,7 +4,7 @@
 import base64
 import json
 import warnings
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import aiohttp
 
@@ -137,6 +137,7 @@ class Organizations(Base):
                                token_expires_in_seconds: int = 0,
                                token_subject: str = "",
                                refresh_token_expires_in_sec: int = 0,
+                               device_id: Optional[str] = None,
                                **kwargs: Any) -> Any:
         """
         Exchange a license key for a Device Token Pair.
@@ -160,7 +161,8 @@ class Organizations(Base):
             "Version": app_version[:20],
             "TokenSubject": token_subject,
             "TokenExpiresIn": token_expires_in_seconds if token_expires_in_seconds > 0 else 86400,
-            "RefreshTokenExpiresIn": refresh_token_expires_in_sec if refresh_token_expires_in_sec > 0 else 2592000
+            "RefreshTokenExpiresIn": refresh_token_expires_in_sec if refresh_token_expires_in_sec > 0 else 2592000,
+            "DeviceID": device_id,
         }
 
         status, body = await cls._post(session, f"{cls.url_fragment}/licenses", data=data, **kwargs)
